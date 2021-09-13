@@ -42,6 +42,15 @@
       }
     }
   </script>
+  <style>
+    .menuContainer {
+      display: inline-block;
+    }
+    .menuButton {
+      margin: 0.5em;
+      width: 100%;
+    }
+  </style>
   <script type="text/babel">
     const { useState, useRef } = React;
     
@@ -74,7 +83,7 @@
 
       function DefaultMenu() {
         return (
-          <div>
+          <div class="menuContainer">
             <button class="menuButton" onClick={onNewGameClick}>Новая игра</button> <br/>
             <button class="menuButton" onClick={() => setMenuState("dict")}>Посмотреть словарь</button> <br/>
             <button class="menuButton" onClick={() => setMenuState("opts")}>Настройки</button> <br/>
@@ -93,7 +102,7 @@
           "aaa": "aaa"
         };
         return (
-          <div>
+          <div class="menuContainer">
             <ul>
               {Object.entries(words)
                 .map(w => (<li>{w[0]}</li>))}
@@ -105,7 +114,7 @@
 
       function Options() {
         return (
-          <div>
+          <div class="menuContainer">
           
           </div>
         );
@@ -124,7 +133,7 @@
         }
 
         return (
-          <form onSubmit={onSaveClick}>
+          <form class="menuContainer" onSubmit={onSaveClick}>
             <input type="file" /><br />
             <textarea onChange={onTextChange}>{text}</textarea><br />
             <input class="menuButton" type="submit" value="Сохранить" />
