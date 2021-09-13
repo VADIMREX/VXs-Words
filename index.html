@@ -1,116 +1,173 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>VX's Words</title>
-    <script src="https://unpkg.com/react@16/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- <script>
-      Babel.registerPreset("my-preset", {
-        presets: [
-          [
-            Babel.availablePresets["typescript"], 
-            {
-              isTSX: true,
-              allExtensions: true,
-            }
-          ]
-        ]
-      });
-    </script> -->
-    <!-- <script type="text/babel" data-type="module" data-presets="my-preset"> -->
-    <script type="text/javascript">
-      let CookieManager = new class {
-        /**
-         * @param {string} key
-         * @return {string}
-         */
-        getRaw(key) {
-          return document.cookie.replace(`(?:(?:^|.*;\\s*)${key}\\s*\\=\\s*([^;]*).*$)|^.*$`, "$1");
-        }
-        /**
-         * @param {string} key
-         * @return {any}
-         */
-        get(key) {
-          let s = this.getRaw(key);
-          s = atob(s);
-          return s ? JSON.parse(s) : null;
-        }
-        /**
-         * @param {string} key
-         * @param {string} value
-         */
-        setRaw(key, value) {
-          document.cookie = `${key}=${value}`;
-        }
-        /**
-         * @param {string} key
-         * @param {any} value
-         */
-        set(key, value) {
-          value = null == value ? "" : JSON.stringify(value);
-          value = btoa(value);
-          this.setRaw(key, value);
-        }
-      }
-    </script>
-    <script type="text/babel">
-      const { useState, useRef } = React;
 
-      function Importer() {
-        const [isOpened, setIsOpened] = useState(false);
-        const [text, setText] = useState("");
-        if (isOpened) {
-          return (
-            <form>
-              <input type="file" /><br />
-              <textarea onChange={(event)=>setText()}>{text}</textarea><br />
-              <input type="submit" value="Сохранить" />
-            </form>
-          );
-        }
-        else {
-          return (<button onClick={()=>setIsOpened(true)}>Импортировать файл</button>)
-        }
+<head>
+  <title>VX's Words</title>
+  <script src="https://unpkg.com/react@16/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script type="text/javascript">
+    let CookieManager = new class {
+      /**
+       * @param {string} key
+       * @return {string}
+       */
+      getRaw(key) {
+        return document.cookie.replace(`(?:(?:^|.*;\\s*)${key}\\s*\\=\\s*([^;]*).*$)|^.*$`, "$1");
+      }
+      /**
+       * @param {string} key
+       * @return {any}
+       */
+      get(key) {
+        let s = this.getRaw(key);
+        s = atob(s);
+        return s ? JSON.parse(s) : null;
+      }
+      /**
+       * @param {string} key
+       * @param {string} value
+       */
+      setRaw(key, value) {
+        document.cookie = `${key}=${value}`;
+      }
+      /**
+       * @param {string} key
+       * @param {any} value
+       */
+      set(key, value) {
+        value = null == value ? "" : JSON.stringify(value);
+        value = btoa(value);
+        this.setRaw(key, value);
+      }
+    }
+  </script>
+  <script type="text/babel">
+    const { useState, useRef } = React;
+    
+    /**
+     * Основное меню 
+     * @typedef {object} MainMenuProps
+     * @prop {undefined|()=>void} onNewGameClick - обаботчик кнопки новая игра
+     * @prop {undefined|()=>void} onBackClick - обаботчик кнопки назад
+     */
+    /** 
+     * Основное меню 
+     * @param {MainMenuProps} props
+     */
+    function MainMenu(props) {
+      let [menuState, setMenuState] = useState("main");
+
+      function onNewGameClick() {
+        if (!props || !props.onNewGameClick) return;
+        props.onNewGameClick();
+      }
+
+      function onBackClick() {
+        if (!props || !props.onBackClick) return;
+        props.onBackClick();
+      }
+
+      function onBackToDefault() {
+        setMenuState("mainMenu")
+      }
+
+      function DefaultMenu() {
+        return (
+          <div>
+            <button class="menuButton" onClick={onNewGameClick}>Новая игра</button> <br/>
+            <button class="menuButton" onClick={() => setMenuState("dict")}>Посмотреть словарь</button> <br/>
+            <button class="menuButton" onClick={() => setMenuState("opts")}>Настройки</button> <br/>
+            <button class="menuButton" onClick={() => setMenuState("impexp")}>Импорт/Экспорт словаря</button><br/>
+            {
+              props&&props.onBackClick ? 
+                (<button class="menuButton" onClick={onBackClick}>Назад</button>) : 
+                (<br/>)
+            }
+          </div>
+        )
       }
 
       function WordsDictionary() {
-        const [isOpened, setIsOpened] = useState(false);
-        let words = {
-          "at": "at",
+        var words = {
+          "aaa": "aaa"
         };
-        if (isOpened) {
-          return (
-            <div>
-              <ul>
-                {Object.entries(words)
-                       .map(w => (<li>{w[0]}</li>))}
-              </ul>
-              <button onClick={()=>setIsOpened(false)}>Закрыть</button>
-            </div>
-          );
-        }
-        else {
-          return (<button onClick={()=>setIsOpened(true)}>Посмотреть словарь</button>)
-        }
+        return (
+          <div>
+            <ul>
+              {Object.entries(words)
+                .map(w => (<li>{w[0]}</li>))}
+            </ul>
+            <button class="menuButton" onClick={onBackToDefault}>Закрыть</button>
+          </div>
+        );
       }
 
-      function App() {
-        const profile = CookieManager.get("profile") || {};
-        return (<div>
-          <h1>VX's Words</h1>
-          <Importer />
-          <WordsDictionary />
-        </div>)
+      function Options() {
+        return (
+          <div>
+          
+          </div>
+        );
       }
-      ReactDOM.render(
-        <App/>,
-        document.getElementById("app")
-      );
-    </script>
-  </head>
-  <body>
-    <div id="app"></div>
-  </body>
+
+      function Importer() {
+        const [text, setText] = useState("");
+
+        function onSaveClick(event) {
+          event.preventDefault();
+          onBackToDefault();
+        }
+
+        function onTextChange(event) {
+          setText(event.target.value)
+        }
+
+        return (
+          <form onSubmit={onSaveClick}>
+            <input type="file" /><br />
+            <textarea onChange={onTextChange}>{text}</textarea><br />
+            <input class="menuButton" type="submit" value="Сохранить" />
+          </form>
+        );
+      }
+
+      switch (menuState) {
+        case "main":
+        default: return (<DefaultMenu />);
+        case "opts": 
+          return (<Options />)
+        case "dict":
+          return (<WordsDictionary />)
+        case "impexp":
+          return (<Importer />)
+      }
+    }
+
+    function App() {
+      let [gameState, setGameState] = useState("mainMenu");
+
+      const profile = CookieManager.get("profile") || {};
+
+      function onNewGameClick() {
+        setGameState("newGame");
+      }
+
+      return (<div>
+        <h1>VX's Words</h1>
+          {"mainMenu" == gameState ? (<MainMenu onNewGameClick={onNewGameClick} />) :
+          (<div></div>)}
+      </div>)
+    }
+    ReactDOM.render(
+      <App />,
+      document.getElementById("app")
+    );
+  </script>
+</head>
+
+<body>
+  <div id="app"></div>
+</body>
+
 </html>
