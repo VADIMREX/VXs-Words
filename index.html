@@ -52,7 +52,10 @@
     }
   </style>
   <script type="text/babel">
-    const { useState, useRef } = React;
+    const { 
+      useState, 
+      useRef 
+    } = React;
     
     /**
      * Основное меню 
@@ -153,19 +156,107 @@
       }
     }
 
+    function Game(props) {
+      const [state, setState] = useState("prepare");
+      const [word, setWord] = useState("");
+
+      function onBackClick() {
+        if (!props || !props.onBackClick) return;
+        props.onBackClick();
+      }
+
+      function selectWord(word) {
+        setWord(word);
+        setState("inGame");
+      }
+
+      function onGameOver() {
+        setState("over")
+      }
+
+      function NewGame(props) {
+        function getRandomWords() {
+          return ["aaa", "bbb", "ccc", "ddd"];
+        }
+        
+        const [rndWord, setRndWord] = useState(getRandomWords());
+        const [searchWord, setSearchWord] = useState("");
+        const [findedWords, setFindedWords] = useState([]);
+
+        function onRefreshRandom() {
+          setRndWord(getRandomWords());
+        }
+
+        function onSearchWordChanged(event) {
+          setSearchWord(event.target.value);
+        }
+
+        return (
+          <div class="menuContainer">
+            {props.children}
+            <button class="menuButton" onClick={onBackClick}>в главное меню</button><br/>
+            Случайные слова <button onClick={onRefreshRandom}>🗘</button><br/>
+            <table>
+              <tr>
+                <td><button class="menuButton" onClick={()=>selectWord(rndWord[0])}>{rndWord[0]}</button></td>
+                <td><button class="menuButton" onClick={()=>selectWord(rndWord[1])}>{rndWord[1]}</button></td>
+              </tr>
+              <tr>
+                <td><button class="menuButton" onClick={()=>selectWord(rndWord[2])}>{rndWord[2]}</button></td>
+                <td><button class="menuButton" onClick={()=>selectWord(rndWord[3])}>{rndWord[3]}</button></td>
+              </tr>
+            </table>
+            <input type="text" value={searchWord} onChange={onSearchWordChanged} />
+            <div>
+              {findedWords.map((item)=>(<button class="menuButton" onClick={()=>selectWord(item)}>{item}</button>))}
+            </div>
+          </div>
+        );
+      }
+
+      function InGame() {
+        const [newWord, setNewWord] = useState("");
+        return (
+          <div class="menuContainer">
+            <button class="menuButton" onClick={onGameOver}>Завершить</button><br/>
+            <h2>{word}</h2>
+            {Array.from(newWord).map((ch, i)=>(<button onClick={onGameOver} enabled={}>{ch}</button>))}
+            {Array.from(word).map((ch, i)=>(<button onClick={onGameOver} enabled={}>{ch}</button>))}
+          </div>
+        );
+      }
+
+      function GameOver() {
+        return (
+          <NewGame>
+            <div>Результаты:</div>
+          </NewGame>
+        );
+      }
+
+      switch(state) {
+        case "prepare": return (<NewGame />);
+        case "inGame": return (<InGame />);
+        case "over": return (<GameOver />);
+      }
+    }
+
     function App() {
-      let [gameState, setGameState] = useState("mainMenu");
+      const [gameState, setGameState] = useState("mainMenu");
 
       const profile = CookieManager.get("profile") || {};
-
+      
       function onNewGameClick() {
         setGameState("newGame");
+      }
+      function onBackClick() {
+        setGameState("mainMenu");
       }
 
       return (<div>
         <h1>VX's Words</h1>
           {"mainMenu" == gameState ? (<MainMenu onNewGameClick={onNewGameClick} />) :
-          (<div></div>)}
+          (<Game onBackClick={onBackClick} />)}
       </div>)
     }
     ReactDOM.render(
