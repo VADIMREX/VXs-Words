@@ -55,7 +55,7 @@
     const { 
       useState, 
       useRef 
-    } = React;
+    } = /** @type {{useState:<T>(arg:T)=>[T, (arg:T)=>void]}} */ (window.React);
     
     /**
      * Основное меню 
@@ -220,8 +220,8 @@
           <div class="menuContainer">
             <button class="menuButton" onClick={onGameOver}>Завершить</button><br/>
             <h2>{word}</h2>
-            {Array.from(newWord).map((ch, i)=>(<button onClick={onGameOver} enabled={}>{ch}</button>))}
-            {Array.from(word).map((ch, i)=>(<button onClick={onGameOver} enabled={}>{ch}</button>))}
+            {Array.from(newWord).map((ch, i)=>(<button onClick={onGameOver} enabled={true}>{ch}</button>))}
+            {Array.from(word).map((ch, i)=>(<button onClick={onGameOver} enabled={true}>{ch}</button>))}
           </div>
         );
       }
