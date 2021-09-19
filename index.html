@@ -7,7 +7,22 @@
   <script src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script type="text/javascript">
-    let CookieManager = new class {
+    const CookieManager = new class {
+      b64EncodeUnicode(str) {
+        // first we use encodeURIComponent to get percent-encoded UTF-8,
+        // then we convert the percent encodings into raw bytes which
+        // can be fed into btoa.
+        return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+            function toSolidBytes(match, p1) {
+                return String.fromCharCode('0x' + p1);
+        }));
+      }
+      b64DecodeUnicode(str) {
+        // Going backwards: from bytestream, to percent-encoding, to original string.
+        return decodeURIComponent(atob(str).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+      }
       /**
        * @param {string} key
        * @return {string}
@@ -17,12 +32,15 @@
       }
       /**
        * @param {string} key
-       * @return {any}
+       * @param {T?} def
+       * @return {T}
+       * @template T
        */
-      get(key) {
+      get(key, def) {
+        if (arguments.length < 2) def = null;
         let s = this.getRaw(key);
-        s = atob(s);
-        return s ? JSON.parse(s) : null;
+        s = this.b64DecodeUnicode(s);
+        return s ? JSON.parse(s) : def;
       }
       /**
        * @param {string} key
@@ -37,8 +55,71 @@
        */
       set(key, value) {
         value = null == value ? "" : JSON.stringify(value);
-        value = btoa(value);
+        value = this.b64EncodeUnicode(value);
         this.setRaw(key, value);
+      }
+    }
+    const WordsManager = new class {
+      constructor() {
+        this.loadFromCookies();
+      }
+      loadFromCookies() {
+        /** @type {{[key:string]:number}} */
+        this.words = CookieManager.get("words", {});
+      }
+      saveToCookies() {
+        CookieManager.set("words", this.words);
+      }
+      
+
+      /** 
+       * Разбить текст на слова
+       * @param {string} str 
+       */
+      splitOnSpecialChars(str) {
+        let set = new Set([
+          "~","`",
+          "!","@","#","$","%","^","&","*","(",")",
+          "_","+","-","=",
+          "[","]","{","}","\\","|",
+          ";","'",":","\"",
+          ",",".","<",">","/","?",
+          " ","\t","\r","\n"
+        ]);
+        let arr = Array.from(str);
+        let st = 0;
+        let res = [];
+        for (let i = 0; i < arr.length; i++) {
+          if (!set.has(arr[i])) continue;
+          if (st != i) res.push(str.substr(st, i - st).toUpperCase())
+          st = i + 1;
+        }
+        if (st < arr.length) res.push(str.substr(st, arr.length - st).toUpperCase())
+        return res;
+      }
+      /** 
+       * Импорт текста
+       * @param {string} raw 
+       */
+      importText(raw) {
+        this.words = {};
+        let arr = this.splitOnSpecialChars(raw);
+        for (let i = 0; i < arr.length; i++) {
+          if (!this.words[arr[i]]) this.words[arr[i]] = 1;
+          else this.words[arr[i]]++;
+        }
+        this.saveToCookies();
+      }
+      /** 
+       * @param {number?} length
+       * @return {string} 
+       */
+      getRndWord(length) {
+        if (undefined == length) length = 0;
+        let findedWords = Object.entries(this.words)
+                                .filter(x => x[0].length > length)
+                                .map(x => x[0]);
+        return findedWords[Math.floor(Math.random()*findedWords.length)]
       }
     }
   </script>
@@ -107,7 +188,7 @@
         return (
           <div class="menuContainer">
             <ul>
-              {Object.entries(words)
+              {Object.entries(WordsManager.words)
                 .map(w => (<li>{w[0]}</li>))}
             </ul>
             <button class="menuButton" onClick={onBackToDefault}>Закрыть</button>
@@ -128,6 +209,7 @@
 
         function onSaveClick(event) {
           event.preventDefault();
+          WordsManager.importText(text);
           onBackToDefault();
         }
 
@@ -176,7 +258,12 @@
 
       function NewGame(props) {
         function getRandomWords() {
-          return ["aaa", "bbb", "ccc", "ddd"];
+          return [
+            WordsManager.getRndWord(),
+            WordsManager.getRndWord(),
+            WordsManager.getRndWord(),
+            WordsManager.getRndWord()
+          ];
         }
         
         const [rndWord, setRndWord] = useState(getRandomWords());
