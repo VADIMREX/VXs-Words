@@ -7,20 +7,96 @@
   <script src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script type="text/javascript">
+    /**
+     * @template TArgs extends any[]
+     */
+     class VXsEvent {
+      constructor() {
+        /** @type {((...args:TArgs)=>void)[]} */
+        this.callbacks = [];
+      }
+      /** 
+       * @param {(...args:TArgs)=>void} callback
+       */
+      subscribe(callback) {
+        this.callbacks.push(callback)
+      }
+      /** 
+       * @param {(...args:TArgs)=>void} callback
+       */
+      unsubscribe(callback) {
+        let index = this.callbacks.findIndex(x=>x===callback);
+        if (undefined == index) return;
+        this.callbacks.splice(index, 1);
+      }
+      /**
+       * @param {TArgs} args
+       */
+      invoke(...args) {
+        let errors = [];
+        for (let k in this.callbacks) if (this.callbacks[k].apply(null, args)) try { this.callbacks[k](value) } catch(e) { errors.push(e); }
+        if (0 != errors.length) throw ["errors on invoke of event", errors];
+      }
+    }
+  </script>
+  <script type="text/javascript">
+    /**
+     * сохранить файл 
+     * @param {string} filename
+     * @param {string} text
+     */
+    function saveFile(filename, text) {
+      let oFile = document.createElement('a');
+      oFile.setAttribute('href', 'data:application/json;charset=utf-8,' + encodeURIComponent(text));
+      oFile.setAttribute('download', filename);
+      if (document.createEvent) {
+        let event = document.createEvent('MouseEvents');
+        event.initEvent('click', true, true);
+        oFile.dispatchEvent(event);
+      }
+      else {
+        oFile.click();
+      }
+    }
+    
+    /**
+     * открыть файл
+     * @param {(this:Scope, content: string )=>void} callback
+     * @param {Scope} scope
+     * @template Scope
+     */
+    function openFile(callback, scope) {
+      var iFile = document.createElement('input');
+      iFile.type = 'file';
+      iFile.onchange = e => { 
+        var reader = new FileReader();
+        reader.readAsText(e.target.files[0],'UTF-8');
+        reader.onload = readerEvent => callback.call(scope || this, readerEvent.target.result);
+      }
+      if (document.createEvent) {
+        let event = document.createEvent('MouseEvents');
+        event.initEvent('click', true, true);
+        iFile.dispatchEvent(event);
+      }
+      else {
+        iFile.click();
+      }
+    }
+
     const CookieManager = new class {
       b64EncodeUnicode(str) {
         // first we use encodeURIComponent to get percent-encoded UTF-8,
         // then we convert the percent encodings into raw bytes which
         // can be fed into btoa.
         return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
-            function toSolidBytes(match, p1) {
-                return String.fromCharCode('0x' + p1);
-        }));
+          function toSolidBytes(match, p1) {
+            return String.fromCharCode('0x' + p1);
+          }));
       }
       b64DecodeUnicode(str) {
         // Going backwards: from bytestream, to percent-encoding, to original string.
-        return decodeURIComponent(atob(str).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        return decodeURIComponent(atob(str).split('').map(function (c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
         }).join(''));
       }
       /**
@@ -70,7 +146,6 @@
       saveToCookies() {
         CookieManager.set("words", this.words);
       }
-      
 
       /** 
        * Разбить текст на слова
@@ -78,13 +153,13 @@
        */
       splitOnSpecialChars(str) {
         let set = new Set([
-          "~","`",
-          "!","@","#","$","%","^","&","*","(",")",
-          "_","+","-","=",
-          "[","]","{","}","\\","|",
-          ";","'",":","\"",
-          ",",".","<",">","/","?",
-          " ","\t","\r","\n"
+          "~", "`",
+          "!", "@", "#", "$", "%", "^", "&", "*", "(", ")",
+          "_", "+", "-", "=",
+          "[", "]", "{", "}", "\\", "|",
+          ";", "'", ":", "\"",
+          ",", ".", "<", ">", "/", "?",
+          " ", "\t", "\r", "\n"
         ]);
         let arr = Array.from(str);
         let st = 0;
@@ -117,9 +192,45 @@
       getRndWord(length) {
         if (undefined == length) length = 0;
         let findedWords = Object.entries(this.words)
-                                .filter(x => x[0].length > length)
-                                .map(x => x[0]);
-        return findedWords[Math.floor(Math.random()*findedWords.length)]
+          .filter(x => x[0].length > length)
+          .map(x => x[0]);
+        return findedWords[Math.floor(Math.random() * findedWords.length)]
+      }
+    }
+
+    
+
+    const OnlineConnection = new class {
+      constructor() {
+        this.isConnected = false;
+        /** @type {VXsEvent<[boolean]>} */
+        this.onIsOnlineChanged = new VXsEvent();
+      }
+    }
+
+    class Profile {
+      static instance = new Profile();
+      static loadProfileOnline() {
+
+      }
+      static saveProfileOnline() {
+        
+      }
+      static loadProfileOffline() {
+        openFile(content => {
+          let model = JSON.parse(content);
+          this.instance = new Profile(model)
+        }, this);
+      }
+      static saveProfileOffline() {
+        saveFile(i.name, JSON.stringify(this.instance));
+      }
+
+      constructor(model) {
+        if (arguments.length < 1) model = {};
+        ({ 
+          name: this.name 
+        } = model);
       }
     }
   </script>
@@ -127,23 +238,26 @@
     .menuContainer {
       display: inline-block;
     }
+
     .menuButton {
       margin: 0.5em;
       width: 100%;
     }
   </style>
   <script type="text/babel">
-    const { 
-      useState, 
-      useRef 
-    } = /** @type {{useState:<T>(arg:T)=>[T, (arg:T)=>void]}} */ (window.React);
-    
+    const {
+      useState,
+      useEffect,
+      useRef
+    } = /** @type {{useState:<T>(arg:T)=>[T, (arg:T)=>void],useEffect: (mount:()=>()=>void)=>void}} */ (window.React);
+
     /**
-     * Основное меню 
-     * @typedef {object} MainMenuProps
+     * Атрибуты основного меню 
+     * @typedef MainMenuProps
      * @prop {undefined|()=>void} onNewGameClick - обаботчик кнопки новая игра
      * @prop {undefined|()=>void} onBackClick - обаботчик кнопки назад
      */
+
     /** 
      * Основное меню 
      * @param {MainMenuProps} props
@@ -165,22 +279,24 @@
         setMenuState("mainMenu")
       }
 
+      /** базовое состояние меню */
       function DefaultMenu() {
         return (
           <div class="menuContainer">
-            <button class="menuButton" onClick={onNewGameClick}>Новая игра</button> <br/>
-            <button class="menuButton" onClick={() => setMenuState("dict")}>Посмотреть словарь</button> <br/>
-            <button class="menuButton" onClick={() => setMenuState("opts")}>Настройки</button> <br/>
-            <button class="menuButton" onClick={() => setMenuState("impexp")}>Импорт/Экспорт словаря</button><br/>
+            <button class="menuButton" onClick={onNewGameClick}>Новая игра</button> <br />
+            <button class="menuButton" onClick={() => setMenuState("dict")}>Посмотреть словарь</button> <br />
+            <button class="menuButton" onClick={() => setMenuState("opts")}>Настройки</button> <br />
+            <button class="menuButton" onClick={() => setMenuState("impexp")}>Импорт/Экспорт словаря</button><br />
             {
-              props&&props.onBackClick ? 
-                (<button class="menuButton" onClick={onBackClick}>Назад</button>) : 
-                (<br/>)
+              props && props.onBackClick ?
+                (<button class="menuButton" onClick={onBackClick}>Назад</button>) :
+                (<br />)
             }
           </div>
         )
       }
 
+      /** Просмотр словаря */
       function WordsDictionary() {
         var words = {
           "aaa": "aaa"
@@ -189,18 +305,49 @@
           <div class="menuContainer">
             <ul>
               {Object.entries(WordsManager.words)
-                .map(w => (<li>{w[0]}</li>))}
+                .map(w => (<li>{w[0]}: {w[1]}</li>))}
             </ul>
             <button class="menuButton" onClick={onBackToDefault}>Закрыть</button>
           </div>
         );
       }
 
+      /** Настройки */
       function Options() {
+        const {name} = Profile.instance;
+        function onLoadContentOfflineClick() {
+          Profile.loadProfileOffline();
+        }
+        function onSaveContentOfflineClick() {
+          Profile.saveProfileOffline();
+        }
+        function SaveLoadOnline() {
+          const [isConnected, setIsConnected] = useState(OnlineConnection.isConnected);
+          useEffect(()=> {
+            OnlineConnection.onIsOnlineChanged.subscribe(setIsConnected);
+            return () => OnlineConnection.onIsOnlineChanged.unsubscribe(setIsConnected);
+          });
+          if (!isConnected) return null;
+          return (<div>
+            Онлайн<br/>
+            <button class="menuButton" onClick={onSaveContentOfflineClick}>Сохранить профиль</button>
+            <button class="menuButton" onClick={onLoadContentOfflineClick}>Загрузить профиль</button>
+          </div>);
+        }
+        function SaveLoadOffline() {
+          return (<div>
+            Локально<br/>
+            <button class="menuButton" onClick={onSaveContentOfflineClick}>Сохранить профиль</button>
+            <button class="menuButton" onClick={onLoadContentOfflineClick}>Загрузить профиль</button>
+          </div>);
+        }
         return (
           <div class="menuContainer">
-          
+            <button class="menuButton" onClick={onBackToDefault}>Назад</button><br/>
+            <SaveLoadOnline />
+            <SaveLoadOffline />
           </div>
+
         );
       }
 
@@ -229,7 +376,7 @@
       switch (menuState) {
         case "main":
         default: return (<DefaultMenu />);
-        case "opts": 
+        case "opts":
           return (<Options />)
         case "dict":
           return (<WordsDictionary />)
@@ -265,7 +412,7 @@
             WordsManager.getRndWord()
           ];
         }
-        
+
         const [rndWord, setRndWord] = useState(getRandomWords());
         const [searchWord, setSearchWord] = useState("");
         const [findedWords, setFindedWords] = useState([]);
@@ -281,21 +428,21 @@
         return (
           <div class="menuContainer">
             {props.children}
-            <button class="menuButton" onClick={onBackClick}>в главное меню</button><br/>
-            Случайные слова <button onClick={onRefreshRandom}>🗘</button><br/>
+            <button class="menuButton" onClick={onBackClick}>в главное меню</button><br />
+            Случайные слова <button onClick={onRefreshRandom}>🗘</button><br />
             <table>
               <tr>
-                <td><button class="menuButton" onClick={()=>selectWord(rndWord[0])}>{rndWord[0]}</button></td>
-                <td><button class="menuButton" onClick={()=>selectWord(rndWord[1])}>{rndWord[1]}</button></td>
+                <td><button class="menuButton" onClick={() => selectWord(rndWord[0])}>{rndWord[0]}</button></td>
+                <td><button class="menuButton" onClick={() => selectWord(rndWord[1])}>{rndWord[1]}</button></td>
               </tr>
               <tr>
-                <td><button class="menuButton" onClick={()=>selectWord(rndWord[2])}>{rndWord[2]}</button></td>
-                <td><button class="menuButton" onClick={()=>selectWord(rndWord[3])}>{rndWord[3]}</button></td>
+                <td><button class="menuButton" onClick={() => selectWord(rndWord[2])}>{rndWord[2]}</button></td>
+                <td><button class="menuButton" onClick={() => selectWord(rndWord[3])}>{rndWord[3]}</button></td>
               </tr>
             </table>
             <input type="text" value={searchWord} onChange={onSearchWordChanged} />
             <div>
-              {findedWords.map((item)=>(<button class="menuButton" onClick={()=>selectWord(item)}>{item}</button>))}
+              {findedWords.map((item) => (<button class="menuButton" onClick={() => selectWord(item)}>{item}</button>))}
             </div>
           </div>
         );
@@ -305,10 +452,10 @@
         const [newWord, setNewWord] = useState("");
         return (
           <div class="menuContainer">
-            <button class="menuButton" onClick={onGameOver}>Завершить</button><br/>
+            <button class="menuButton" onClick={onGameOver}>Завершить</button><br />
             <h2>{word}</h2>
-            {Array.from(newWord).map((ch, i)=>(<button onClick={onGameOver} enabled={true}>{ch}</button>))}
-            {Array.from(word).map((ch, i)=>(<button onClick={onGameOver} enabled={true}>{ch}</button>))}
+            {Array.from(newWord).map((ch, i) => (<button onClick={onGameOver} enabled={true}>{ch}</button>))}
+            {Array.from(word).map((ch, i) => (<button onClick={onGameOver} enabled={true}>{ch}</button>))}
           </div>
         );
       }
@@ -321,7 +468,7 @@
         );
       }
 
-      switch(state) {
+      switch (state) {
         case "prepare": return (<NewGame />);
         case "inGame": return (<InGame />);
         case "over": return (<GameOver />);
@@ -332,7 +479,7 @@
       const [gameState, setGameState] = useState("mainMenu");
 
       const profile = CookieManager.get("profile") || {};
-      
+
       function onNewGameClick() {
         setGameState("newGame");
       }
@@ -342,7 +489,7 @@
 
       return (<div>
         <h1>VX's Words</h1>
-          {"mainMenu" == gameState ? (<MainMenu onNewGameClick={onNewGameClick} />) :
+        {"mainMenu" == gameState ? (<MainMenu onNewGameClick={onNewGameClick} />) :
           (<Game onBackClick={onBackClick} />)}
       </div>)
     }
