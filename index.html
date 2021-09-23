@@ -10,7 +10,7 @@
     /**
      * @template TArgs extends any[]
      */
-     class VXsEvent {
+    class VXsEvent {
       constructor() {
         /** @type {((...args:TArgs)=>void)[]} */
         this.callbacks = [];
@@ -25,7 +25,7 @@
        * @param {(...args:TArgs)=>void} callback
        */
       unsubscribe(callback) {
-        let index = this.callbacks.findIndex(x=>x===callback);
+        let index = this.callbacks.findIndex(x => x === callback);
         if (undefined == index) return;
         this.callbacks.splice(index, 1);
       }
@@ -34,9 +34,50 @@
        */
       invoke(...args) {
         let errors = [];
-        for (let k in this.callbacks) if (this.callbacks[k].apply(null, args)) try { this.callbacks[k](value) } catch(e) { errors.push(e); }
+        for (let k in this.callbacks) if (this.callbacks[k].apply(null, args)) try { this.callbacks[k](value) } catch (e) { errors.push(e); }
         if (0 != errors.length) throw ["errors on invoke of event", errors];
       }
+    }
+
+    /** 
+     * Разбить текст на слова
+     * @param {string} str 
+     */
+    function splitOnSpecialChars(str) {
+      let set = new Set([
+        "~", "`",
+        "!", "@", "#", "$", "%", "^", "&", "*", "(", ")",
+        "_", "+", "-", "=",
+        "[", "]", "{", "}", "\\", "|",
+        ";", "'", ":", "\"",
+        ",", ".", "<", ">", "/", "?",
+        " ", "\t", "\r", "\n"
+      ]);
+      let arr = Array.from(str);
+      let st = 0;
+      let res = [];
+      for (let i = 0; i < arr.length; i++) {
+        if (!set.has(arr[i])) continue;
+        if (st != i) res.push(str.substr(st, i - st).toUpperCase())
+        st = i + 1;
+      }
+      if (st < arr.length) res.push(str.substr(st, arr.length - st).toUpperCase())
+      return res;
+    }
+    function b64EncodeUnicode(str) {
+      // first we use encodeURIComponent to get percent-encoded UTF-8,
+      // then we convert the percent encodings into raw bytes which
+      // can be fed into btoa.
+      return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+        function toSolidBytes(match, p1) {
+          return String.fromCharCode('0x' + p1);
+        }));
+    }
+    function b64DecodeUnicode(str) {
+      // Going backwards: from bytestream, to percent-encoding, to original string.
+      return decodeURIComponent(atob(str).split('').map(function (c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
     }
   </script>
   <script type="text/javascript">
@@ -58,7 +99,7 @@
         oFile.click();
       }
     }
-    
+
     /**
      * открыть файл
      * @param {(this:Scope, content: string )=>void} callback
@@ -68,9 +109,9 @@
     function openFile(callback, scope) {
       var iFile = document.createElement('input');
       iFile.type = 'file';
-      iFile.onchange = e => { 
+      iFile.onchange = e => {
         var reader = new FileReader();
-        reader.readAsText(e.target.files[0],'UTF-8');
+        reader.readAsText(e.target.files[0], 'UTF-8');
         reader.onload = readerEvent => callback.call(scope || this, readerEvent.target.result);
       }
       if (document.createEvent) {
@@ -84,21 +125,7 @@
     }
 
     const CookieManager = new class {
-      b64EncodeUnicode(str) {
-        // first we use encodeURIComponent to get percent-encoded UTF-8,
-        // then we convert the percent encodings into raw bytes which
-        // can be fed into btoa.
-        return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
-          function toSolidBytes(match, p1) {
-            return String.fromCharCode('0x' + p1);
-          }));
-      }
-      b64DecodeUnicode(str) {
-        // Going backwards: from bytestream, to percent-encoding, to original string.
-        return decodeURIComponent(atob(str).split('').map(function (c) {
-          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-      }
+
       /**
        * @param {string} key
        * @return {string}
@@ -115,7 +142,7 @@
       get(key, def) {
         if (arguments.length < 2) def = null;
         let s = this.getRaw(key);
-        s = this.b64DecodeUnicode(s);
+        s = b64DecodeUnicode(s);
         return s ? JSON.parse(s) : def;
       }
       /**
@@ -131,7 +158,7 @@
        */
       set(key, value) {
         value = null == value ? "" : JSON.stringify(value);
-        value = this.b64EncodeUnicode(value);
+        value = b64EncodeUnicode(value);
         this.setRaw(key, value);
       }
     }
@@ -142,35 +169,23 @@
       loadFromCookies() {
         /** @type {{[key:string]:number}} */
         this.words = CookieManager.get("words", {});
+        this.getMostCommon();
+        this.getLongest();
       }
       saveToCookies() {
         CookieManager.set("words", this.words);
       }
-
-      /** 
-       * Разбить текст на слова
-       * @param {string} str 
-       */
-      splitOnSpecialChars(str) {
-        let set = new Set([
-          "~", "`",
-          "!", "@", "#", "$", "%", "^", "&", "*", "(", ")",
-          "_", "+", "-", "=",
-          "[", "]", "{", "}", "\\", "|",
-          ";", "'", ":", "\"",
-          ",", ".", "<", ">", "/", "?",
-          " ", "\t", "\r", "\n"
-        ]);
-        let arr = Array.from(str);
-        let st = 0;
-        let res = [];
-        for (let i = 0; i < arr.length; i++) {
-          if (!set.has(arr[i])) continue;
-          if (st != i) res.push(str.substr(st, i - st).toUpperCase())
-          st = i + 1;
-        }
-        if (st < arr.length) res.push(str.substr(st, arr.length - st).toUpperCase())
-        return res;
+      getMostCommon() {
+        /** @type {number} */
+        this.mostCommon = 0;
+        Object.entries(this.words).forEach(w => this.mostCommon = this.mostCommon > w[1] ? this.mostCommon : w[1]);
+        return this.mostCommon;
+      }
+      getLongest() {
+        /** @type {number} */
+        this.longest = 0;
+        Object.entries(this.words).forEach(w => this.longest = this.longest > w[0].length ? this.longest : w[0].length);
+        return this.longest;
       }
       /** 
        * Импорт текста
@@ -178,12 +193,14 @@
        */
       importText(raw) {
         this.words = {};
-        let arr = this.splitOnSpecialChars(raw);
+        let arr = splitOnSpecialChars(raw);
         for (let i = 0; i < arr.length; i++) {
           if (!this.words[arr[i]]) this.words[arr[i]] = 1;
           else this.words[arr[i]]++;
         }
         this.saveToCookies();
+        this.getMostCommon();
+        this.getLongest();
       }
       /** 
        * @param {number?} length
@@ -196,9 +213,16 @@
           .map(x => x[0]);
         return findedWords[Math.floor(Math.random() * findedWords.length)]
       }
+      /**
+       * Проверить стоимость слова
+       * @param {string} word
+       */
+      checkPrice(word) {
+        let price = this.words[word];
+        if (price > 0) return word.length + (this.mostCommon - price) / this.mostCommon * this.longest;
+        return -1;
+      }
     }
-
-    
 
     const OnlineConnection = new class {
       constructor() {
@@ -214,7 +238,7 @@
 
       }
       static saveProfileOnline() {
-        
+
       }
       static loadProfileOffline() {
         openFile(content => {
@@ -228,8 +252,8 @@
 
       constructor(model) {
         if (arguments.length < 1) model = {};
-        ({ 
-          name: this.name 
+        ({
+          name: this.name
         } = model);
       }
     }
@@ -314,7 +338,7 @@
 
       /** Настройки */
       function Options() {
-        const {name} = Profile.instance;
+        const { name } = Profile.instance;
         function onLoadContentOfflineClick() {
           Profile.loadProfileOffline();
         }
@@ -323,27 +347,27 @@
         }
         function SaveLoadOnline() {
           const [isConnected, setIsConnected] = useState(OnlineConnection.isConnected);
-          useEffect(()=> {
+          useEffect(() => {
             OnlineConnection.onIsOnlineChanged.subscribe(setIsConnected);
             return () => OnlineConnection.onIsOnlineChanged.unsubscribe(setIsConnected);
           });
           if (!isConnected) return null;
           return (<div>
-            Онлайн<br/>
+            Онлайн<br />
             <button class="menuButton" onClick={onSaveContentOfflineClick}>Сохранить профиль</button>
             <button class="menuButton" onClick={onLoadContentOfflineClick}>Загрузить профиль</button>
           </div>);
         }
         function SaveLoadOffline() {
           return (<div>
-            Локально<br/>
+            Локально<br />
             <button class="menuButton" onClick={onSaveContentOfflineClick}>Сохранить профиль</button>
             <button class="menuButton" onClick={onLoadContentOfflineClick}>Загрузить профиль</button>
           </div>);
         }
         return (
           <div class="menuContainer">
-            <button class="menuButton" onClick={onBackToDefault}>Назад</button><br/>
+            <button class="menuButton" onClick={onBackToDefault}>Назад</button><br />
             <SaveLoadOnline />
             <SaveLoadOffline />
           </div>
@@ -448,14 +472,70 @@
         );
       }
 
-      function InGame() {
-        const [newWord, setNewWord] = useState("");
+      function InGame(props) {
+        const [score, setScore] = useState(0);
+        const [newWord, setNewWord] = useState([]);
+        const [findedWords, setFindedWords] = useState([]);
+        const [alreadyFinded, setAlreadyFinded] = useState("");
+
+        function Letter(props) {
+          const [isEnabled, setIsEnabled] = useState(true);
+
+          function setBack() {
+            setIsEnabled(true);
+          }
+
+          function onClick() {
+            if (props.onSelected) props.onSelected(props.char, props.position, setBack);
+            setIsEnabled(false);
+          }
+          return (
+            <button onClick={onClick} disabled={!isEnabled}>{props.char}</button>
+          )
+        }
+
+        function NewLetter(props) {
+          if (" " == props.char) return (<span>&nbsp;</span>);
+          function onClick() {
+            if (props.onSelected) props.onSelected();
+            backLetter[props.position]();
+            let aWord = [].concat(newWord);
+            aWord[props.position].char = " ";
+            setNewWord(aWord);
+          }
+          return (
+            <button onClick={onClick}>{props.char}</button>
+          )
+        }
+
+        function onLetterClick(char, position, setBack) {
+          let i = 0
+          let aWord = [].concat(newWord);
+          for (; i < aWord.length; i++) if (" " == aWord[i].char) break;
+          if (aWord.length == i) aWord.push({ char, setBack });
+          else aWord[i] = { char, setBack };
+          setNewWord(aWord);
+        }
+
+        function onCheckWord() {
+          let sWord = newWord.map(x=>" " == x.char ? "" : x.char).join("");
+          setNewWord([]);
+          let letterPrice = WordsManager.checkPrice(sWord);
+          if (-1 == letterPrice) return setScore(score + letterPrice);
+          let isAlreadyFinded = findedWords.find(x => x === sWord);
+          if (!isAlreadyFinded) return setAlreadyFinded(isAlreadyFinded);
+          setFindedWords(findedWords.concat([sWord]));
+          setScore(score + letterPrice);
+        }
+
         return (
           <div class="menuContainer">
             <button class="menuButton" onClick={onGameOver}>Завершить</button><br />
             <h2>{word}</h2>
-            {Array.from(newWord).map((ch, i) => (<button onClick={onGameOver} enabled={true}>{ch}</button>))}
-            {Array.from(word).map((ch, i) => (<button onClick={onGameOver} enabled={true}>{ch}</button>))}
+            {newWord.map((ch, i) => (<NewLetter char={ch.char} position={i} onSelected={ch.setBack} />))}&nbsp;
+            {0 != newWord ? (<button onClick={onCheckWord}>⟰</button>) : null}
+            <br />
+            {Array.from(word).map((ch, i) => (<Letter char={ch} position={i} onSelected={onLetterClick} />))}
           </div>
         );
       }
