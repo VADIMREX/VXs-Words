@@ -166,21 +166,38 @@
       constructor() {
         this.loadFromCookies();
       }
+      getWordKey(word) {
+        let res = {};
+        for (let i = 0; i < word.length; i++)
+          if (!res[word[i]]) res[word[i]] = 1;
+          else res[word[i]]++;
+        return res;
+      }
+      checkTwoKeys(key1, key2) {
+        for (let i in key1)
+          if ((key2[i] || 0) < key1[i]) return false;
+        return true;
+      }
+
+      /** Загрузить из кук */
       loadFromCookies() {
         /** @type {{[key:string]:number}} */
         this.words = CookieManager.get("words", {});
         this.getMostCommon();
         this.getLongest();
       }
+      /** Сохранить в куках */
       saveToCookies() {
         CookieManager.set("words", this.words);
       }
+      /** найти самое часто встречающееся слово */
       getMostCommon() {
         /** @type {number} */
         this.mostCommon = 0;
         Object.entries(this.words).forEach(w => this.mostCommon = this.mostCommon > w[1] ? this.mostCommon : w[1]);
         return this.mostCommon;
       }
+      /** найти наидлиннейшее слово */
       getLongest() {
         /** @type {number} */
         this.longest = 0;
@@ -189,11 +206,11 @@
       }
       /** 
        * Импорт текста
-       * @param {string} raw 
+       * @param {string} text текст
        */
-      importText(raw) {
+      importText(text) {
         this.words = {};
-        let arr = splitOnSpecialChars(raw);
+        let arr = splitOnSpecialChars(text);
         for (let i = 0; i < arr.length; i++) {
           if (!this.words[arr[i]]) this.words[arr[i]] = 1;
           else this.words[arr[i]]++;
@@ -203,23 +220,37 @@
         this.getLongest();
       }
       /** 
-       * @param {number?} length
+       * Найти случайное слово
+       * @param {number?} minLength минимальная длинна слова, по умолчанию поиск по всем словам
        * @return {string} 
        */
-      getRndWord(length) {
-        if (undefined == length) length = 0;
+      getRndWord(minLength) {
+        if (undefined == minLength) minLength = 0;
         let findedWords = Object.entries(this.words)
-          .filter(x => x[0].length > length)
+          .filter(x => x[0].length > minLength)
           .map(x => x[0]);
         return findedWords[Math.floor(Math.random() * findedWords.length)]
       }
       /**
+       * Проверить редкость слова
+       * @param {string} word слово
+       * @return от 0 до 1 на сколько слово редкое:
+       * - 1 самое редкое
+       * - 0 самое обычное или не найденное
+       */
+      checkRarity(word) {
+        let rarity = this.words[word];
+        return rarity > 0 ? (this.mostCommon - rarity) / this.mostCommon : 0;
+      }
+      /**
        * Проверить стоимость слова
        * @param {string} word
+       * @return стоимость слова, учитывается длинна слова и редкость, самое
+       * редкое слово стоит в 2 раза дороже самого обыного с той же длинной
        */
       checkPrice(word) {
         let price = this.words[word];
-        if (price > 0) return word.length + (this.mostCommon - price) / this.mostCommon * this.longest;
+        if (price > 0) return word.length + this.checkRarity(word) * this.longest;
         return -1;
       }
     }
@@ -266,6 +297,22 @@
     .menuButton {
       margin: 0.5em;
       width: 100%;
+    }
+
+    .newFinded {
+      color: seagreen;
+    }
+
+    .finded {
+      color: goldenrod;
+    }
+
+    .positive {
+      color: seagreen;
+    }
+
+    .negative {
+      color: crimson;
     }
   </style>
   <script type="text/babel">
@@ -412,6 +459,13 @@
     function Game(props) {
       const [state, setState] = useState("prepare");
       const [word, setWord] = useState("");
+      /** 
+       * @typedef resultsModel
+       * @prop {number} score
+       * @prop {string[]} findedWords
+       * @prop {string} word
+       */
+      const [results, setResults] = useState(/** @type {resultsModel} */(null));
 
       function onBackClick() {
         if (!props || !props.onBackClick) return;
@@ -423,8 +477,12 @@
         setState("inGame");
       }
 
-      function onGameOver() {
-        setState("over")
+      /** 
+       * @param {resultsModel} results 
+       */
+      function onGameOver(results) {
+        setState("over");
+        setResults(results);
       }
 
       function NewGame(props) {
@@ -439,7 +497,7 @@
 
         const [rndWord, setRndWord] = useState(getRandomWords());
         const [searchWord, setSearchWord] = useState("");
-        const [findedWords, setFindedWords] = useState([]);
+        const [findedWords, setFindedWords] = useState(/** @type {string[]} */([]));
 
         function onRefreshRandom() {
           setRndWord(getRandomWords());
@@ -474,76 +532,180 @@
 
       function InGame(props) {
         const [score, setScore] = useState(0);
-        const [newWord, setNewWord] = useState([]);
-        const [findedWords, setFindedWords] = useState([]);
+        const [dScore, setDScore] = useState(0);
+        /** 
+         * @typedef letterModel 
+         * @prop {string} char
+         * @prop {boolean} isUsed
+         */
+        const [letters, setLetters] = useState(/** @type {letterModel[]} */(
+          Array.from(word)
+            .map(ch => {
+              return {
+                char: ch,
+                isUsed: false
+              }
+            })
+        ));
+        /**
+         * @typedef newLetterModel
+         * @prop {string} char
+         * @prop {number} fromLetter
+         */
+        const [newWord, setNewWord] = useState(/** @type {newLetterModel[]} */([]));
+        const [findedWords, setFindedWords] = useState(/** @type {string[]} */([]));
         const [alreadyFinded, setAlreadyFinded] = useState("");
+        const [lastFinded, setLastFinded] = useState("");
 
+        /** @param {{
+         *    char:string,
+         *    enabled:boolean,
+         *    position:number,
+         *    onClick:(position:number)=>void
+         * }} props */
         function Letter(props) {
-          const [isEnabled, setIsEnabled] = useState(true);
-
-          function setBack() {
-            setIsEnabled(true);
-          }
-
+          if (undefined === props.enabled) props.enabled = true;
           function onClick() {
-            if (props.onSelected) props.onSelected(props.char, props.position, setBack);
-            setIsEnabled(false);
+            if (props.onClick) props.onClick(props.position);
           }
           return (
-            <button onClick={onClick} disabled={!isEnabled}>{props.char}</button>
+            <button onClick={onClick} disabled={!props.enabled}>{props.char}</button>
           )
         }
 
-        function NewLetter(props) {
-          if (" " == props.char) return (<span>&nbsp;</span>);
-          function onClick() {
-            if (props.onSelected) props.onSelected();
-            backLetter[props.position]();
-            let aWord = [].concat(newWord);
-            aWord[props.position].char = " ";
-            setNewWord(aWord);
-          }
-          return (
-            <button onClick={onClick}>{props.char}</button>
-          )
+        /** 
+         * @param {number} position 
+         */
+        function setLetterUsed(position, isUsed) {
+          /** @type {letterModel[]} */
+          let dLetters = [].concat(letters);
+          dLetters[position].isUsed = isUsed;
+          setLetters(dLetters);
         }
-
-        function onLetterClick(char, position, setBack) {
+        /** 
+         * @param {number} position 
+         */
+        function onLetterClick(position) {
+          setLetterUsed(position, true);
+          /** @type {newLetterModel[]} */
+          let dNewWord = [].concat(newWord);
           let i = 0
-          let aWord = [].concat(newWord);
-          for (; i < aWord.length; i++) if (" " == aWord[i].char) break;
-          if (aWord.length == i) aWord.push({ char, setBack });
-          else aWord[i] = { char, setBack };
-          setNewWord(aWord);
+          for (; i < dNewWord.length; i++)
+            if (" " == dNewWord[i].char) break;
+          dNewWord[i] = {
+            char: letters[position].char,
+            fromLetter: position
+          }
+          setNewWord(dNewWord);
         }
 
+        /** 
+         * @param {number} position 
+         */
+        function onNewLetterClick(position) {
+          /** @type {newLetterModel[]} */
+          let dNewWord = [].concat(newWord);
+          setLetterUsed(dNewWord[position].fromLetter, false);
+          dNewWord[position] = {
+            char: " ",
+            fromLetter: -1
+          }
+          setNewWord(dNewWord);
+        }
+
+        function changeScore(price) {
+          setScore(score + price);
+          setDScore(price);
+        }
+
+        /** Оценить слово */
         function onCheckWord() {
-          let sWord = newWord.map(x=>" " == x.char ? "" : x.char).join("");
+          let sWord = newWord.map(x => " " == x.char ? "" : x.char).join("");
+          setLastFinded(sWord);
           setNewWord([]);
+          /** @type {letterModel[]} */
+          let dLetters = [].concat(letters);
+          for (let i in dLetters) dLetters[i].isUsed = false;
+          setLetters(dLetters);
           let letterPrice = WordsManager.checkPrice(sWord);
-          if (-1 == letterPrice) return setScore(score + letterPrice);
+          if (-1 == letterPrice) return changeScore(letterPrice);
           let isAlreadyFinded = findedWords.find(x => x === sWord);
-          if (!isAlreadyFinded) return setAlreadyFinded(isAlreadyFinded);
-          setFindedWords(findedWords.concat([sWord]));
-          setScore(score + letterPrice);
+          if (isAlreadyFinded) setAlreadyFinded(isAlreadyFinded);
+          else setFindedWords([sWord].concat(findedWords));
+          changeScore(isAlreadyFinded ? 0 : letterPrice);
         }
 
         return (
           <div class="menuContainer">
-            <button class="menuButton" onClick={onGameOver}>Завершить</button><br />
+            <button class="menuButton" onClick={onGameOver.bind(null, { score, findedWords, word })}>Завершить</button><br />
             <h2>{word}</h2>
-            {newWord.map((ch, i) => (<NewLetter char={ch.char} position={i} onSelected={ch.setBack} />))}&nbsp;
+            Очки: {Math.round(score * 100) / 100} {0 == score ? "" : (<span class={dScore > 0 ? "positive" : "negative"}>{dScore > 0 ? "+" : ""}{Math.round(dScore * 100) / 100}</span>)}<br />
+            {newWord.map((l, i) => (<Letter char={l.char} position={i} enabled={" " != l.char} onClick={onNewLetterClick} />))}&nbsp;
             {0 != newWord ? (<button onClick={onCheckWord}>⟰</button>) : null}
             <br />
-            {Array.from(word).map((ch, i) => (<Letter char={ch} position={i} onSelected={onLetterClick} />))}
+            {letters.map((l, i) => (<Letter char={l.char} enabled={!l.isUsed} position={i} onClick={onLetterClick} />))}
+            <br />
+            Найденные слова:
+            <ul>
+              {findedWords.map(word => (<li class={alreadyFinded == word ? "finded" :
+                lastFinded == word ? "newFinded" :
+                  ""}>{word}</li>))}
+            </ul>
           </div>
         );
       }
 
       function GameOver() {
+        /** @type {{word:string,rarity:number,price:number,isFound:boolean}[][]} */
+        let wordsByLength = [];
+        let wordKey = WordsManager.getWordKey(results.word);
+
+        for (let word in WordsManager.words) {
+          if (!WordsManager.checkTwoKeys(WordsManager.getWordKey(word), wordKey)) continue;
+          if (!wordsByLength[word.length]) wordsByLength[word.length] = [];
+          wordsByLength[word.length].push({
+            word: word,
+            price: Math.round(WordsManager.checkPrice(word) * 100) / 100,
+            rarity: Math.round(WordsManager.checkRarity(word) * 100),
+            isFound: results.findedWords.find(w => w == word) !== undefined
+          });
+        }
         return (
           <NewGame>
             <div>Результаты:</div>
+            <div>Набрано очков: {results.score}</div>
+            <table>
+              {(() => {
+                let res = [];
+                let i = 0;
+                let b;
+                let header = [];
+                for (let k = wordsByLength.length - 1; k > -1; k--)
+                  if (!wordsByLength[k] || 0 == wordsByLength[k].length) continue;
+                  else header.push((<th colspan={3}>{k}</th>));
+                res.push((<tr>{header}</tr>))
+                do {
+                  let row = [];
+                  b = false;
+                  for (let k = wordsByLength.length - 1; k > -1; k--) {
+                    if (!wordsByLength[k] || 0 == wordsByLength[k].length) continue;
+                    if (!wordsByLength[k] || !wordsByLength[k][i]) {
+                      row.push((<td colspan={3}></td>))
+                      continue;
+                    }
+                    b = true;
+                    let cell = wordsByLength[k][i].word
+                    if (wordsByLength[k][i].isFound) cell = (<b>{cell}</b>);
+                    row.push((<td>{cell}</td>));
+                    row.push((<td>{wordsByLength[k][i].price}</td>));
+                    row.push((<td>{wordsByLength[k][i].rarity}</td>));
+                  }
+                  if (b) res.push((<tr>{row}</tr>));
+                  i++;
+                } while (b);
+                return res;
+              })()}
+            </table>
           </NewGame>
         );
       }
