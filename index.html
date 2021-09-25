@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
-
 <head>
+  <meta charset="utf-8">
   <title>VX's Words</title>
   <script src="https://unpkg.com/react@16/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js" crossorigin></script>
@@ -696,9 +696,9 @@
                     b = true;
                     let cell = wordsByLength[k][i].word
                     if (wordsByLength[k][i].isFound) cell = (<b>{cell}</b>);
-                    row.push((<td>{cell}</td>));
-                    row.push((<td>{wordsByLength[k][i].price}</td>));
-                    row.push((<td>{wordsByLength[k][i].rarity}</td>));
+                    row.push((<td>{cell}</td>),
+                             (<td>{wordsByLength[k][i].price}</td>),
+                             (<td>{wordsByLength[k][i].rarity}</td>));
                   }
                   if (b) res.push((<tr>{row}</tr>));
                   i++;
