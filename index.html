@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8">
   <title>VX's Words</title>
@@ -56,10 +57,23 @@
       let arr = Array.from(str);
       let st = 0;
       let res = [];
+      let state = 0;
       for (let i = 0; i < arr.length; i++) {
-        if (!set.has(arr[i])) continue;
-        if (st != i) res.push(str.substr(st, i - st).toUpperCase())
-        st = i + 1;
+        switch (state) {
+          case 0:
+            if (set.has(arr[i])) state = 1;
+            else state = 2;
+            break;
+          case 1:
+            if (set.has(arr[i])) st = i + 1;
+            else { st = i; state = 2; }
+            break;
+          case 2:
+            if (!set.has(arr[i])) break;
+            res.push(str.substr(st, i - st));
+            st = i + 1;
+            state = 1;
+        }
       }
       if (st < arr.length) res.push(str.substr(st, arr.length - st).toUpperCase())
       return res;
@@ -323,6 +337,54 @@
     } = /** @type {{useState:<T>(arg:T)=>[T, (arg:T)=>void],useEffect: (mount:()=>()=>void)=>void}} */ (window.React);
 
     /**
+     * @typedef WordInfo информация о слове
+     * @prop {string} word слово
+     * @prop {number} rarity редкость
+     * @prop {number} price стоимость
+     * @prop {boolean} isFound найдено? (для результатов)
+     */
+
+    /**
+     * Таблица слов разбитая по колонкам
+     * @param {{wordsByLength:WordInfo[][]}} props
+     */
+    function WordsTable(props) {
+      const { wordsByLength } = props;
+      let res = [];
+      let i = 0;
+      let b;
+      let header = [];
+      for (let k = wordsByLength.length - 1; k > -1; k--)
+        if (!wordsByLength[k] || 0 == wordsByLength[k].length) continue;
+        else header.push((<th colspan={3}>{k}</th>));
+      res.push((<tr>{header}</tr>))
+      do {
+        let row = [];
+        b = false;
+        for (let k = wordsByLength.length - 1; k > -1; k--) {
+          if (!wordsByLength[k] || 0 == wordsByLength[k].length) continue;
+          if (!wordsByLength[k] || !wordsByLength[k][i]) {
+            row.push((<td colspan={3}></td>))
+            continue;
+          }
+          b = true;
+          let cell = wordsByLength[k][i].word
+          if (wordsByLength[k][i].isFound) cell = (<b>{cell}</b>);
+          row.push((<td>{cell}</td>),
+            (<td>{wordsByLength[k][i].price}</td>),
+            (<td>{wordsByLength[k][i].rarity}</td>));
+        }
+        if (b) res.push((<tr>{row}</tr>));
+        i++;
+      } while (b);
+      return (
+        <table>
+          {res}
+        </table>
+      );
+    }
+
+    /**
      * Атрибуты основного меню 
      * @typedef MainMenuProps
      * @prop {undefined|()=>void} onNewGameClick - обаботчик кнопки новая игра
@@ -369,16 +431,21 @@
 
       /** Просмотр словаря */
       function WordsDictionary() {
-        var words = {
-          "aaa": "aaa"
-        };
+        /** @type {WordInfo[][]} */
+        let wordsByLength = []
+        for (let word in WordsManager.words) {
+          if (!wordsByLength[word.length]) wordsByLength[word.length] = [];
+          wordsByLength[word.length].push({
+            word: word,
+            price: Math.round(WordsManager.checkPrice(word) * 100) / 100,
+            rarity: Math.round(WordsManager.checkRarity(word) * 100),
+            isFound: false
+          });
+        }
+
         return (
           <div class="menuContainer">
-            <ul>
-              {Object.entries(WordsManager.words)
-                .map(w => (<li>{w[0]}: {w[1]}</li>))}
-            </ul>
-            <button class="menuButton" onClick={onBackToDefault}>Закрыть</button>
+            <WordsTable wordsByLength={wordsByLength} />
           </div>
         );
       }
@@ -656,7 +723,7 @@
       }
 
       function GameOver() {
-        /** @type {{word:string,rarity:number,price:number,isFound:boolean}[][]} */
+        /** @type {WordInfo[][]} */
         let wordsByLength = [];
         let wordKey = WordsManager.getWordKey(results.word);
 
@@ -674,38 +741,8 @@
           <NewGame>
             <div>Результаты:</div>
             <div>Набрано очков: {results.score}</div>
-            <table>
-              {(() => {
-                let res = [];
-                let i = 0;
-                let b;
-                let header = [];
-                for (let k = wordsByLength.length - 1; k > -1; k--)
-                  if (!wordsByLength[k] || 0 == wordsByLength[k].length) continue;
-                  else header.push((<th colspan={3}>{k}</th>));
-                res.push((<tr>{header}</tr>))
-                do {
-                  let row = [];
-                  b = false;
-                  for (let k = wordsByLength.length - 1; k > -1; k--) {
-                    if (!wordsByLength[k] || 0 == wordsByLength[k].length) continue;
-                    if (!wordsByLength[k] || !wordsByLength[k][i]) {
-                      row.push((<td colspan={3}></td>))
-                      continue;
-                    }
-                    b = true;
-                    let cell = wordsByLength[k][i].word
-                    if (wordsByLength[k][i].isFound) cell = (<b>{cell}</b>);
-                    row.push((<td>{cell}</td>),
-                             (<td>{wordsByLength[k][i].price}</td>),
-                             (<td>{wordsByLength[k][i].rarity}</td>));
-                  }
-                  if (b) res.push((<tr>{row}</tr>));
-                  i++;
-                } while (b);
-                return res;
-              })()}
-            </table>
+            Найденные слова:<br />
+            <WordsTable wordsByLength={wordsByLength} />
           </NewGame>
         );
       }
