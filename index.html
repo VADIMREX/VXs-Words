@@ -55,27 +55,18 @@
         " ", "\t", "\r", "\n"
       ]);
       let arr = Array.from(str);
-      let st = 0;
       let res = [];
-      let state = 0;
+      let buff = [];
       for (let i = 0; i < arr.length; i++) {
-        switch (state) {
-          case 0:
-            if (set.has(arr[i])) state = 1;
-            else state = 2;
-            break;
-          case 1:
-            if (set.has(arr[i])) st = i + 1;
-            else { st = i; state = 2; }
-            break;
-          case 2:
-            if (!set.has(arr[i])) break;
-            res.push(str.substr(st, i - st));
-            st = i + 1;
-            state = 1;
+        if (!set.has(arr[i])) {
+          buff.push(arr[i]);
+          continue;
         }
+        if (0 == buff.length) continue;
+        res.push(buff.join(""));
+        buff = [];
       }
-      if (st < arr.length) res.push(str.substr(st, arr.length - st).toUpperCase())
+      if (buff.length > 0) res.push(buff.join(""));
       return res;
     }
     function b64EncodeUnicode(str) {
@@ -178,7 +169,7 @@
     }
     const WordsManager = new class {
       constructor() {
-        this.loadFromCookies();
+
       }
       getWordKey(word) {
         let res = {};
@@ -193,17 +184,6 @@
         return true;
       }
 
-      /** Загрузить из кук */
-      loadFromCookies() {
-        /** @type {{[key:string]:number}} */
-        this.words = CookieManager.get("words", {});
-        this.getMostCommon();
-        this.getLongest();
-      }
-      /** Сохранить в куках */
-      saveToCookies() {
-        CookieManager.set("words", this.words);
-      }
       /** найти самое часто встречающееся слово */
       getMostCommon() {
         /** @type {number} */
@@ -224,12 +204,12 @@
        */
       importText(text) {
         this.words = {};
-        let arr = splitOnSpecialChars(text);
-        for (let i = 0; i < arr.length; i++) {
-          if (!this.words[arr[i]]) this.words[arr[i]] = 1;
-          else this.words[arr[i]]++;
+        let wordArr = splitOnSpecialChars(text);
+        for (let i = 0; i < wordArr.length; i++) {
+          let word = wordArr[i].toUpperCase()
+          if (!this.words[word]) this.words[word] = 1;
+          else this.words[word]++;
         }
-        this.saveToCookies();
         this.getMostCommon();
         this.getLongest();
       }
@@ -757,7 +737,7 @@
     function App() {
       const [gameState, setGameState] = useState("mainMenu");
 
-      const profile = CookieManager.get("profile") || {};
+      //const profile = CookieManager.get("profile") || {};
 
       function onNewGameClick() {
         setGameState("newGame");
