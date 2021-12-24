@@ -30,7 +30,7 @@ foreach($line in Get-Content .\src\index.html) {
         
         $subFile = $line.SubString($st + 1, $en - $st - 1)
 
-        foreach($subLine in Get-Content $subFile) {
+        foreach($subLine in Get-Content .\src\$subfile) {
             Add-Content -Path $output -Value $subLine
         }
 
