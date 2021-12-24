@@ -13,7 +13,7 @@ if (-not $of.Exists) {
     exit
 }
 
-foreach($line in Get-Content .\index.html) {
+foreach($line in Get-Content .\src\index.html) {
     $st = -1
     do {
         $st = $line.IndexOf("{", $st + 1)
