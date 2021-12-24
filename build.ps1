@@ -1,3 +1,5 @@
+# Script loads file src/index.html replaced all {path-to-subfile} occurences with content of subfile
+
 $output = $args[0]
 
 if ($null -eq $output -or "" -eq $output) {
