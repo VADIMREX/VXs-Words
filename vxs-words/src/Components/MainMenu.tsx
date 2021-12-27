@@ -1,5 +1,5 @@
-import { Button, Textarea } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
+import { Button, Textarea, VStack } from "@chakra-ui/react";
 import OnlineConnection from "../libs/OnlineConnection";
 import Profile from "../libs/Profile";
 import WordsManager from "../libs/WordsManager";
@@ -37,17 +37,17 @@ export function MainMenu(props: MainMenuProps) {
     /** базовое состояние меню */
     function DefaultMenu() {
         return (
-            <div className="menuContainer">
-                <button className="menuButton" onClick={onNewGameClick}>Новая игра</button> <br />
-                <button className="menuButton" onClick={() => setMenuState("dict")}>Посмотреть словарь</button> <br />
-                <button className="menuButton" onClick={() => setMenuState("opts")}>Настройки</button> <br />
-                <button className="menuButton" onClick={() => setMenuState("impexp")}>Импорт/Экспорт словаря</button><br />
+            <VStack spacing={4} align='stretch'>
+                <Button onClick={onNewGameClick}>Новая игра</Button> <br />
+                <Button onClick={() => setMenuState("dict")}>Посмотреть словарь</Button> <br />
+                <Button onClick={() => setMenuState("opts")}>Настройки</Button> <br />
+                <Button onClick={() => setMenuState("impexp")}>Импорт/Экспорт словаря</Button><br />
                 {
                     props && props.onBackClick ?
-                        (<button className="menuButton" onClick={onBackClick}>Назад</button>) :
+                        (<Button onClick={onBackClick}>Назад</Button>) :
                         (<br />)
                 }
-            </div>
+            </VStack>
         )
     }
 
@@ -102,7 +102,7 @@ export function MainMenu(props: MainMenuProps) {
         }
         return (
             <div className="menuContainer">
-                <Button className="menuButton" onClick={onBackToDefault}>Назад</Button><br />
+                <Button onClick={onBackToDefault}>Назад</Button><br />
                 <SaveLoadOnline />
                 <SaveLoadOffline />
             </div>

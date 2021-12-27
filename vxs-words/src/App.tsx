@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { Box, ChakraProvider, Heading } from "@chakra-ui/react";
+import { Box, ChakraProvider, Grid, GridItem, Heading } from "@chakra-ui/react";
 import { MainMenu } from "./Components/MainMenu";
 import { Game } from "./Components/Game";
 
@@ -18,11 +18,15 @@ function App() {
 
   return (
     <ChakraProvider>
-      <Box>
-        <Heading>VX's Words</Heading>
-        {"mainMenu" === gameState ? (<MainMenu onNewGameClick={onNewGameClick} />) :
-          (<Game onBackClick={onBackClick} />)}
-      </Box>
+      <Grid templateColumns='repeat(3, 1fr)'>
+        <GridItem />
+        <GridItem>
+          <Heading>VX's Words</Heading>
+          {"mainMenu" === gameState ? (<MainMenu onNewGameClick={onNewGameClick} />) :
+            (<Game onBackClick={onBackClick} />)}
+        </GridItem>
+        <GridItem />
+      </Grid>
     </ChakraProvider>
   )
 }

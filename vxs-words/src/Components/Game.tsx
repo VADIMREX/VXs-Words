@@ -1,3 +1,4 @@
+import { Button } from "@chakra-ui/react";
 import { ChangeEvent, PropsWithChildren, useState } from "react";
 import WordsManager from "../libs/WordsManager";
 import { WordInfo, WordsTable } from "./WordsTable";
@@ -53,21 +54,21 @@ export function Game(props: { onBackClick: () => void }) {
         return (
             <div className="menuContainer">
                 {props.children}
-                <button className="menuButton" onClick={onBackClick}>в главное меню</button><br />
-                Случайные слова <button onClick={onRefreshRandom}>🗘</button><br />
+                <Button onClick={onBackClick}>в главное меню</Button><br />
+                Случайные слова <Button onClick={onRefreshRandom}>🗘</Button><br />
                 <table>
                     <tr>
-                        <td><button className="menuButton" onClick={() => selectWord(rndWord[0])}>{rndWord[0]}</button></td>
-                        <td><button className="menuButton" onClick={() => selectWord(rndWord[1])}>{rndWord[1]}</button></td>
+                        <td><Button onClick={() => selectWord(rndWord[0])}>{rndWord[0]}</Button></td>
+                        <td><Button onClick={() => selectWord(rndWord[1])}>{rndWord[1]}</Button></td>
                     </tr>
                     <tr>
-                        <td><button className="menuButton" onClick={() => selectWord(rndWord[2])}>{rndWord[2]}</button></td>
-                        <td><button className="menuButton" onClick={() => selectWord(rndWord[3])}>{rndWord[3]}</button></td>
+                        <td><Button onClick={() => selectWord(rndWord[2])}>{rndWord[2]}</Button></td>
+                        <td><Button onClick={() => selectWord(rndWord[3])}>{rndWord[3]}</Button></td>
                     </tr>
                 </table>
                 <input type="text" value={searchWord} onChange={onSearchWordChanged} />
                 <div>
-                    {findedWords.map((item) => (<button className="menuButton" onClick={() => selectWord(item)}>{item}</button>))}
+                    {findedWords.map((item) => (<Button onClick={() => selectWord(item)}>{item}</Button>))}
                 </div>
             </div>
         );
@@ -113,7 +114,7 @@ export function Game(props: { onBackClick: () => void }) {
                 if (props.onClick) props.onClick(props.position);
             }
             return (
-                <button onClick={onClick} disabled={!props.enabled}>{props.char}</button>
+                <Button onClick={onClick} disabled={!props.enabled}>{props.char}</Button>
             )
         }
 
@@ -172,11 +173,11 @@ export function Game(props: { onBackClick: () => void }) {
 
         return (
             <div className="menuContainer">
-                <button className="menuButton" onClick={onGameOver.bind(null, { score, findedWords, word })}>Завершить</button><br />
+                <Button onClick={onGameOver.bind(null, { score, findedWords, word })}>Завершить</Button><br />
                 <h2>{word}</h2>
                 Очки: {Math.round(score * 100) / 100} {0 === score ? "" : (<span className={dScore > 0 ? "positive" : "negative"}>{dScore > 0 ? "+" : ""}{Math.round(dScore * 100) / 100}</span>)}<br />
                 {newWord.map((l, i) => (<Letter char={l.char} position={i} enabled={" " !== l.char} onClick={onNewLetterClick} />))}&nbsp;
-                {0 !== newWord.length ? (<button onClick={onCheckWord}>⟰</button>) : null}
+                {0 !== newWord.length ? (<Button onClick={onCheckWord}>⟰</Button>) : null}
                 <br />
                 {letters.map((l, i) => (<Letter char={l.char} enabled={!l.isUsed} position={i} onClick={onLetterClick} />))}
                 <br />

@@ -1,9 +1,4 @@
-import {
-    Table,
-    Tr,
-    Th,
-    Td,
-} from '@chakra-ui/react'
+import { Table, Tr, Th, Td } from '@chakra-ui/react'
 
 export interface WordInfo {
     /** слово */
