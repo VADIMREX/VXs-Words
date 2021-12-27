@@ -1,12 +1,15 @@
 import { splitOnSpecialChars } from './VXsStringUtils';
 
+/**
+ * @typedef {{[key: string]: number}} WordKey
+ */
 const WordsManager = new class {
     constructor() {
 
     }
     /** 
      * @param {srting} word 
-     * @returns {{[key:string]: number}} 
+     * @returns {WordKey} 
      */
     getWordKey(word) {
         let res = {};
@@ -15,6 +18,12 @@ const WordsManager = new class {
             else res[word[i]]++;
         return res;
     }
+    /**
+     * 
+     * @param {WordKey} key1 
+     * @param {WordKey} key2 
+     * @returns {boolean}
+     */
     checkTwoKeys(key1, key2) {
         for (let i in key1)
             if ((key2[i] || 0) < key1[i]) return false;
