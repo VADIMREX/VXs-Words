@@ -65,7 +65,7 @@ const WordsManager = new class {
      * @return {string} 
      */
     getRndWord(minLength) {
-        if (undefined == minLength) minLength = 0;
+        if (undefined === minLength) minLength = 0;
         let findedWords = Object.entries(this.words)
             .filter(x => x[0].length > minLength)
             .map(x => x[0]);

@@ -1,61 +1,11 @@
-import { PropsWithChildren } from "react";
-import { ChangeEvent } from "react";
-import { useState, useEffect, useRef } from "react";
-import OnlineConnection from "./libs/OnlineConnection";
+import { ChangeEvent, PropsWithChildren, useState, useEffect } from "react";
 
+import OnlineConnection from "./libs/OnlineConnection";
 import Profile from './libs/Profile';
 import WordsManager from "./libs/WordsManager";
 
-type WordInfo = {
-  /** слово */
-  word: string,
-  /** редкость */
-  rarity: number,
-  /** стоимость */
-  price: number,
-  /** найдено? (для результатов) */
-  isFound: boolean,
-}
-
-/**
- * Таблица слов разбитая по колонкам
- * @param props
- */
-function WordsTable(props: { wordsByLength: WordInfo[][] }) {
-  const { wordsByLength } = props;
-  let res = [];
-  let i = 0;
-  let b;
-  let header = [];
-  for (let k = wordsByLength.length - 1; k > -1; k--)
-    if (!wordsByLength[k] || 0 == wordsByLength[k].length) continue;
-    else header.push((<th colSpan={3}>{k}</th>));
-  res.push((<tr>{header}</tr>))
-  do {
-    let row = [];
-    b = false;
-    for (let k = wordsByLength.length - 1; k > -1; k--) {
-      if (!wordsByLength[k] || 0 == wordsByLength[k].length) continue;
-      if (!wordsByLength[k] || !wordsByLength[k][i]) {
-        row.push((<td colSpan={3}></td>))
-        continue;
-      }
-      b = true;
-      let cell: string | JSX.Element = wordsByLength[k][i].word
-      if (wordsByLength[k][i].isFound) cell = (<b>{cell}</b>);
-      row.push((<td>{cell}</td>),
-        (<td>{wordsByLength[k][i].price}</td>),
-        (<td>{wordsByLength[k][i].rarity}</td>));
-    }
-    if (b) res.push((<tr>{row}</tr>));
-    i++;
-  } while (b);
-  return (
-    <table>
-      {res}
-    </table>
-  );
-}
+import { WordInfo, WordsTable } from './Components/WordsTable';
+import { Button, Textarea } from "@chakra-ui/react";
 
 /** Атрибуты основного меню  */
 type MainMenuProps = {
@@ -141,20 +91,20 @@ function MainMenu(props: MainMenuProps) {
       if (!isConnected) return null;
       return (<div>
         Онлайн<br />
-        <button className="menuButton" onClick={onSaveContentOfflineClick}>Сохранить профиль</button>
-        <button className="menuButton" onClick={onLoadContentOfflineClick}>Загрузить профиль</button>
+        <Button onClick={onSaveContentOfflineClick}>Сохранить профиль</Button>
+        <Button onClick={onLoadContentOfflineClick}>Загрузить профиль</Button>
       </div>);
     }
     function SaveLoadOffline() {
       return (<div>
         Локально<br />
-        <button className="menuButton" onClick={onSaveContentOfflineClick}>Сохранить профиль</button>
-        <button className="menuButton" onClick={onLoadContentOfflineClick}>Загрузить профиль</button>
+        <Button onClick={onSaveContentOfflineClick}>Сохранить профиль</Button>
+        <Button onClick={onLoadContentOfflineClick}>Загрузить профиль</Button>
       </div>);
     }
     return (
       <div className="menuContainer">
-        <button className="menuButton" onClick={onBackToDefault}>Назад</button><br />
+        <Button className="menuButton" onClick={onBackToDefault}>Назад</Button><br />
         <SaveLoadOnline />
         <SaveLoadOffline />
       </div>
@@ -178,8 +128,15 @@ function MainMenu(props: MainMenuProps) {
     return (
       <form className="menuContainer" onSubmit={onSaveClick}>
         <input type="file" /><br />
-        <textarea onChange={onTextChange}>{text}</textarea><br />
-        <input className="menuButton" type="submit" value="Сохранить" />
+        <Textarea onChange={onTextChange} value={text} placeholder="Место для вставки слов" /><br />
+        <Button
+          // mt={4}
+          // colorScheme='teal'
+          // isLoading={props.isSubmitting}
+          type='submit'
+        >
+          Сохранить
+        </Button>
       </form>
     );
   }
@@ -205,7 +162,7 @@ function Game(props: { onBackClick: () => void }) {
     findedWords: string[],
     word: string,
   }
-  const [results, setResults] = useState<resultsModel>({ score: 0, findedWords: [], word: ""});
+  const [results, setResults] = useState<resultsModel>({ score: 0, findedWords: [], word: "" });
 
   function onBackClick() {
     if (!props || !props.onBackClick) return;
@@ -322,7 +279,7 @@ function Game(props: { onBackClick: () => void }) {
       let dNewWord = ([] as newLetterModel[]).concat(newWord);
       let i = 0
       for (; i < dNewWord.length; i++)
-        if (" " == dNewWord[i].char) break;
+        if (" " === dNewWord[i].char) break;
       dNewWord[i] = {
         char: letters[position].char,
         fromLetter: position
@@ -350,14 +307,14 @@ function Game(props: { onBackClick: () => void }) {
 
     /** Оценить слово */
     function onCheckWord() {
-      let sWord = newWord.map(x => " " == x.char ? "" : x.char).join("");
+      let sWord = newWord.map(x => " " === x.char ? "" : x.char).join("");
       setLastFinded(sWord);
       setNewWord([]);
       let dLetters = ([] as letterModel[]).concat(letters);
       for (let i in dLetters) dLetters[i].isUsed = false;
       setLetters(dLetters);
       let letterPrice = WordsManager.checkPrice(sWord);
-      if (-1 == letterPrice) return changeScore(letterPrice);
+      if (-1 === letterPrice) return changeScore(letterPrice);
       let isAlreadyFinded = findedWords.find(x => x === sWord);
       if (isAlreadyFinded) setAlreadyFinded(isAlreadyFinded);
       else setFindedWords([sWord].concat(findedWords));
@@ -368,16 +325,16 @@ function Game(props: { onBackClick: () => void }) {
       <div className="menuContainer">
         <button className="menuButton" onClick={onGameOver.bind(null, { score, findedWords, word })}>Завершить</button><br />
         <h2>{word}</h2>
-        Очки: {Math.round(score * 100) / 100} {0 == score ? "" : (<span className={dScore > 0 ? "positive" : "negative"}>{dScore > 0 ? "+" : ""}{Math.round(dScore * 100) / 100}</span>)}<br />
-        {newWord.map((l, i) => (<Letter char={l.char} position={i} enabled={" " != l.char} onClick={onNewLetterClick} />))}&nbsp;
-        {0 != newWord.length ? (<button onClick={onCheckWord}>⟰</button>) : null}
+        Очки: {Math.round(score * 100) / 100} {0 === score ? "" : (<span className={dScore > 0 ? "positive" : "negative"}>{dScore > 0 ? "+" : ""}{Math.round(dScore * 100) / 100}</span>)}<br />
+        {newWord.map((l, i) => (<Letter char={l.char} position={i} enabled={" " !==l.char} onClick={onNewLetterClick} />))}&nbsp;
+        {0 !==newWord.length ? (<button onClick={onCheckWord}>⟰</button>) : null}
         <br />
         {letters.map((l, i) => (<Letter char={l.char} enabled={!l.isUsed} position={i} onClick={onLetterClick} />))}
         <br />
         Найденные слова:
         <ul>
-          {findedWords.map(word => (<li className={alreadyFinded == word ? "finded" :
-            lastFinded == word ? "newFinded" :
+          {findedWords.map(word => (<li className={alreadyFinded === word ? "finded" :
+            lastFinded === word ? "newFinded" :
               ""}>{word}</li>))}
         </ul>
       </div>
@@ -395,7 +352,7 @@ function Game(props: { onBackClick: () => void }) {
         word: word,
         price: Math.round(WordsManager.checkPrice(word) * 100) / 100,
         rarity: Math.round(WordsManager.checkRarity(word) * 100),
-        isFound: results.findedWords.find(w => w == word) !== undefined
+        isFound: results.findedWords.find(w => w === word) !== undefined
       });
     }
     return (
@@ -431,7 +388,7 @@ function App() {
 
   return (<div>
     <h1>VX's Words</h1>
-    {"mainMenu" == gameState ? (<MainMenu onNewGameClick={onNewGameClick} />) :
+    {"mainMenu" === gameState ? (<MainMenu onNewGameClick={onNewGameClick} />) :
       (<Game onBackClick={onBackClick} />)}
   </div>)
 }
