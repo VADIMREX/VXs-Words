@@ -1,4 +1,4 @@
-import { Table, Tr, Th, Td } from '@chakra-ui/react'
+import { Table, Tr, Th, Td, Thead, Tbody } from '@chakra-ui/react'
 
 export interface WordInfo {
     /** слово */
@@ -17,14 +17,14 @@ export interface WordInfo {
 */
 export function WordsTable(props: { wordsByLength: WordInfo[][] }) {
     const { wordsByLength } = props;
-    let res = [];
     let i = 0;
     let b;
-    let header = [];
+    let header: JSX.Element[] | JSX.Element = [];
     for (let k = wordsByLength.length - 1; k > -1; k--)
         if (!wordsByLength[k] || 0 === wordsByLength[k].length) continue;
         else header.push((<Th colSpan={3}>{k}</Th>));
-    res.push((<tr>{header}</tr>))
+    header = (<Thead>{header}</Thead>)
+    let body = []
     do {
         let row = [];
         b = false;
@@ -41,12 +41,13 @@ export function WordsTable(props: { wordsByLength: WordInfo[][] }) {
                 (<Td>{wordsByLength[k][i].price}</Td>),
                 (<Td>{wordsByLength[k][i].rarity}</Td>));
         }
-        if (b) res.push((<Tr>{row}</Tr>));
+        if (b) body.push((<Tr>{row}</Tr>));
         i++;
     } while (b);
     return (
         <Table variant='simple'>
-            {res}
+            {header}
+            <Tbody>{body}</Tbody>
         </Table>
     );
 }

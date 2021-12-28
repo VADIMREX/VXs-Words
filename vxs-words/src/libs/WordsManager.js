@@ -5,7 +5,7 @@ import { splitOnSpecialChars } from './VXsStringUtils';
  */
 const WordsManager = new class {
     constructor() {
-
+        this.words = {};
     }
     /** 
      * @param {srting} word 
@@ -59,6 +59,11 @@ const WordsManager = new class {
         this.getMostCommon();
         this.getLongest();
     }
+    getText() {
+        let res = "";
+        for (let k in this.words) res = `${res} ${k}`;
+        return res;
+    }
     /** 
      * Найти случайное слово
      * @param {number} [minLength] минимальная длинна слова, по умолчанию поиск по всем словам
@@ -92,6 +97,24 @@ const WordsManager = new class {
         let price = this.words[word];
         if (price > 0) return word.length + this.checkRarity(word) * this.longest;
         return -1;
+    }
+
+    /**
+     * 
+     * @returns {WordInfo[][]}
+     */
+    getWordsByLength() {
+        let wordsByLength = [];
+        for (let word in this.words) {
+            if (!wordsByLength[word.length]) wordsByLength[word.length] = [];
+            wordsByLength[word.length].push({
+                word: word,
+                price: Math.round(this.checkPrice(word) * 100) / 100,
+                rarity: Math.round(this.checkRarity(word) * 100),
+                isFound: false
+            });
+        }
+        return wordsByLength;
     }
 }
 
