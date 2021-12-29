@@ -3,7 +3,7 @@ import WordsManager from "../libs/WordsManager";
 import { WordsTable } from "./WordsTable";
 
 export interface WordsDictionaryProps {
-    onBackClick: () => void;
+    onBackClick(): void;
 }
 
 export function WordsDictionary(props: WordsDictionaryProps) {

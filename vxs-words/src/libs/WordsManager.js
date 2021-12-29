@@ -3,7 +3,7 @@ import { splitOnSpecialChars } from './VXsStringUtils';
 /**
  * @typedef {{[key: string]: number}} WordKey
  */
-const WordsManager = new class {
+const WordsManager = new (class WordsManager {
     constructor() {
         this.words = {};
     }
@@ -60,9 +60,8 @@ const WordsManager = new class {
         this.getLongest();
     }
     getText() {
-        let res = "";
-        for (let k in this.words) res = `${res} ${k}`;
-        return res;
+        return Object.entries(this.words)
+                     .map(x=>x[0]);
     }
     /** 
      * Найти случайное слово
@@ -116,6 +115,6 @@ const WordsManager = new class {
         }
         return wordsByLength;
     }
-}
+})();
 
 export default WordsManager;

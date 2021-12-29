@@ -35,7 +35,7 @@ function App() {
       case "importer": return (
         <Importer
           onBackClick={() => setGameState("mainMenu")}
-          onSaveClick={function(text) {
+          onSaveClick={function (text) {
             WordsManager.importText(text)
             setGameState("mainMenu");
           }}

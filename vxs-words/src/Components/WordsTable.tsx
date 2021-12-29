@@ -11,11 +11,15 @@ export interface WordInfo {
     isFound: boolean,
 }
 
+export interface WordsTableProps {
+    wordsByLength: WordInfo[][]
+}
+
 /**
 * Таблица слов разбитая по колонкам
 * @param props
 */
-export function WordsTable(props: { wordsByLength: WordInfo[][] }) {
+export function WordsTable(props: WordsTableProps) {
     const { wordsByLength } = props;
     let i = 0;
     let b;

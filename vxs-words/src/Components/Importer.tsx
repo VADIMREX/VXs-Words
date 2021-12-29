@@ -3,12 +3,12 @@ import { useState } from "react";
 import WordsManager from "../libs/WordsManager";
 
 export interface ImporterProps {
-    onBackClick: () => void;
-    onSaveClick: (value: string) => void;
+    onBackClick(): void;
+    onSaveClick(value: string): void;
 }
 
 export function Importer(props: ImporterProps) {
-    const [text, setText] = useState(WordsManager.getText());
+    const [text, setText] = useState(WordsManager.getText().join());
 
     function onTextChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
         setText(event.target.value)

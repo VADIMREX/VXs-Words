@@ -1,7 +1,7 @@
 import { Button, VStack } from "@chakra-ui/react";
 
 export interface OptionsProps {
-    onBackClick: () => void;
+    onBackClick(): void;
 }
 
 export function Options(props: OptionsProps) {
