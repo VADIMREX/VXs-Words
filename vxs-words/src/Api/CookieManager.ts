@@ -1,6 +1,6 @@
-import { b64EncodeUnicode, b64DecodeUnicode } from './Base64Utils';
+import { b64EncodeUnicode, b64DecodeUnicode } from '../libs/Base64Utils';
 
-const CookieManager = new (class {
+const CookieManager = new (class CookieManager {
     getRaw(key: string) {
         return document.cookie.replace(`(?:(?:^|.*;\\s*)${key}\\s*\\=\\s*([^;]*).*$)|^.*$`, "$1");
     }

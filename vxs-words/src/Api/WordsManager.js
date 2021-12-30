@@ -1,4 +1,4 @@
-import { splitOnSpecialChars } from './VXsStringUtils';
+import { splitOnSpecialChars } from '../libs/VXsStringUtils';
 
 /**
  * @typedef {{[key: string]: number}} WordKey

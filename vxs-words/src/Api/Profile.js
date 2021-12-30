@@ -1,4 +1,4 @@
-import { openFile, saveFile } from './VXsFileUtils'
+import { openFile, saveFile } from '../libs/VXsFileUtils'
 
 class Profile {
   static instance = new Profile();

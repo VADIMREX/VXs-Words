@@ -1,4 +1,4 @@
-import { VXsEvent } from './VXsEvent';
+import { VXsEvent } from '../libs/VXsEvent';
 
 const OnlineConnection = new (class OnlineConnection{
   constructor() {

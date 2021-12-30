@@ -9,7 +9,7 @@ import { WordsDictionary } from "./Components/WordsDictionary";
 
 import { Game } from "./Components/Game";
 
-import WordsManager from "./libs/WordsManager";
+import WordsManager from "./Api/WordsManager";
 
 type states = "newGame" | "mainMenu" | "importer" | "options" | "dictionary";
 

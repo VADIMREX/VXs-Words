@@ -1,6 +1,6 @@
 import { ChangeEvent, PropsWithChildren, useState } from "react";
 import { Box, Button, Grid, GridItem, Input, VStack } from "@chakra-ui/react";
-import WordsManager from "../libs/WordsManager";
+import WordsManager from "../Api/WordsManager";
 
 export interface PrepareGameProps {
     onBackClick(): void;
@@ -23,6 +23,8 @@ export function PrepareGame(props: PropsWithChildren<PrepareGameProps>) {
 
     function onRefreshRandom() {
         setRndWord(getRandomWords());
+        //
+        setFindedWords([]);
     }
 
     let selectWord = props.onWordSelected;

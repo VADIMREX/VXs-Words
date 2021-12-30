@@ -1,5 +1,5 @@
 import { Button, VStack } from "@chakra-ui/react";
-import WordsManager from "../libs/WordsManager";
+import WordsManager from "../Api/WordsManager";
 import { WordsTable } from "./WordsTable";
 
 export interface WordsDictionaryProps {
