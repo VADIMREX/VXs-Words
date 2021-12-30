@@ -1,7 +1,7 @@
-import WordsManager from "../Api/WordsManager";
+import WordsManager, { WordInfo } from "../Api/WordsManager";
 import { resultsModel } from "../Api/GameState";
 import { PrepareGame } from "./PrepareGame";
-import { WordInfo, WordsTable } from "./WordsTable";
+import { WordsTable } from "./WordsTable";
 
 export interface GameOverProps {
     onBackClick(): void;

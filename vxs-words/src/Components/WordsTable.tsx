@@ -1,15 +1,5 @@
 import { Table, Tr, Th, Td, Thead, Tbody } from '@chakra-ui/react'
-
-export interface WordInfo {
-    /** слово */
-    word: string,
-    /** редкость */
-    rarity: number,
-    /** стоимость */
-    price: number,
-    /** найдено? (для результатов) */
-    isFound: boolean,
-}
+import { WordInfo } from '../Api/WordsManager';
 
 export interface WordsTableProps {
     wordsByLength: WordInfo[][]

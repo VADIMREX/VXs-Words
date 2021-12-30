@@ -1,4 +1,4 @@
-import { Button } from "@chakra-ui/react";
+import { Box, Button, Heading, List, ListIcon, ListItem, VStack } from "@chakra-ui/react";
 import { useState } from "react";
 import WordsManager from "../Api/WordsManager";
 import { resultsModel } from "../Api/GameState";
@@ -43,7 +43,6 @@ export function InGame(props: InGameProps) {
         position: number,
         onClick: (position: number) => void
     }) {
-        if (undefined === props.enabled) props.enabled = true;
         function onClick() {
             if (props.onClick) props.onClick(props.position);
         }
@@ -106,21 +105,25 @@ export function InGame(props: InGameProps) {
     }
 
     return (
-        <div className="menuContainer">
-            <Button onClick={props.onGameOver.bind(null, { score, findedWords, word: props.word })}>Завершить</Button><br />
-            <h2>{props.word}</h2>
-            Очки: {Math.round(score * 100) / 100} {0 === score ? "" : (<span className={dScore > 0 ? "positive" : "negative"}>{dScore > 0 ? "+" : ""}{Math.round(dScore * 100) / 100}</span>)}<br />
-            {newWord.map((l, i) => (<Letter char={l.char} position={i} enabled={" " !== l.char} onClick={onNewLetterClick} />))}&nbsp;
-            {0 !== newWord.length ? (<Button onClick={onCheckWord}>⟰</Button>) : null}
-            <br />
-            {letters.map((l, i) => (<Letter char={l.char} enabled={!l.isUsed} position={i} onClick={onLetterClick} />))}
-            <br />
+        <VStack spacing={4} align='stretch'>
+            <Button onClick={props.onGameOver.bind(null, { score, findedWords, word: props.word })}>Завершить</Button>
+            <Heading as="h2">{props.word}</Heading>
+            <Box>Очки: {Math.round(score * 100) / 100} {0 === score ? "" : (<span className={dScore > 0 ? "positive" : "negative"}>{dScore > 0 ? "+" : ""}{Math.round(dScore * 100) / 100}</span>)}</Box>
+            <Box>{newWord.map((l, i) => (<Letter char={l.char} position={i} enabled={" " !== l.char} onClick={onNewLetterClick} />))}&nbsp;
+            {0 !== newWord.length ? (<Button onClick={onCheckWord}>⟰</Button>) : null}</Box>
+            <Box>{letters.map((l, i) => (<Letter char={l.char} enabled={!l.isUsed} position={i} onClick={onLetterClick} />))}
+            </Box>
             Найденные слова:
-            <ul>
-                {findedWords.map(word => (<li className={alreadyFinded === word ? "finded" :
+            <List spacing={3}>
+                {findedWords.map(word => (
+                    <ListItem>
+                        <ListIcon as={"li"} color='green.500' />
+                        {/* <li className={alreadyFinded === word ? "finded" :
                     lastFinded === word ? "newFinded" :
-                        ""}>{word}</li>))}
-            </ul>
-        </div>
+                        ""}> */}
+                        {word}
+                    </ListItem>))}
+            </List>
+        </VStack>
     );
 }
