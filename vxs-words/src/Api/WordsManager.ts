@@ -1,30 +1,40 @@
 import { splitOnSpecialChars } from '../libs/VXsStringUtils';
 
-/**
- * @typedef {{[key: string]: number}} WordKey
- */
+type VXsIDictionary<TKey extends string | number | symbol, TValue> = {
+    [key in TKey]: TValue;
+};
+
+type WordKey = VXsIDictionary<string, number>;
+
+export interface WordInfo {
+    /** слово */
+    word: string,
+    /** редкость */
+    rarity: number,
+    /** стоимость */
+    price: number,
+    /** найдено? (для результатов) */
+    isFound: boolean,
+}
+
 const WordsManager = new (class WordsManager {
+    words: VXsIDictionary<string, number>;
+    mostCommon: number;
+    longest: number;
+
     constructor() {
         this.words = {};
+        this.mostCommon = 0;
+        this.longest = 0;
     }
-    /** 
-     * @param {srting} word 
-     * @returns {WordKey} 
-     */
-    getWordKey(word) {
-        let res = {};
+    getWordKey(word: string): WordKey {
+        let res: WordKey = {};
         for (let i = 0; i < word.length; i++)
             if (!res[word[i]]) res[word[i]] = 1;
             else res[word[i]]++;
         return res;
     }
-    /**
-     * 
-     * @param {WordKey} key1 
-     * @param {WordKey} key2 
-     * @returns {boolean}
-     */
-    checkTwoKeys(key1, key2) {
+    checkTwoKeys(key1: WordKey, key2: WordKey) {
         for (let i in key1)
             if ((key2[i] || 0) < key1[i]) return false;
         return true;
@@ -48,7 +58,7 @@ const WordsManager = new (class WordsManager {
      * Импорт текста
      * @param {string} text текст
      */
-    importText(text) {
+    importText(text: string) {
         this.words = {};
         let wordArr = splitOnSpecialChars(text);
         for (let i = 0; i < wordArr.length; i++) {
@@ -65,13 +75,12 @@ const WordsManager = new (class WordsManager {
     }
     /** 
      * Найти случайное слово
-     * @param {number} [minLength] минимальная длинна слова, по умолчанию поиск по всем словам
-     * @return {string} 
+     * @param minLength минимальная длинна слова, по умолчанию поиск по всем словам
+     * @return
      */
-    getRndWord(minLength) {
-        if (undefined === minLength) minLength = 0;
+    getRndWord(minLength?: number) {
         let findedWords = Object.entries(this.words)
-            .filter(x => x[0].length > minLength)
+            .filter(x => x[0].length > (minLength || 0))
             .map(x => x[0]);
         return findedWords[Math.floor(Math.random() * findedWords.length)]
     }
@@ -82,7 +91,7 @@ const WordsManager = new (class WordsManager {
      * - 1 самое редкое
      * - 0 самое обычное или не найденное
      */
-    checkRarity(word) {
+    checkRarity(word: string) {
         let rarity = this.words[word];
         return rarity > 0 ? (this.mostCommon - rarity) / this.mostCommon : 0;
     }
@@ -92,18 +101,14 @@ const WordsManager = new (class WordsManager {
      * @return стоимость слова, учитывается длинна слова и редкость, самое
      * редкое слово стоит в 2 раза дороже самого обыного с той же длинной
      */
-    checkPrice(word) {
+    checkPrice(word: string) {
         let price = this.words[word];
         if (price > 0) return word.length + this.checkRarity(word) * this.longest;
         return -1;
     }
 
-    /**
-     * 
-     * @returns {WordInfo[][]}
-     */
     getWordsByLength() {
-        let wordsByLength = [];
+        let wordsByLength: WordInfo[][] = [];
         for (let word in this.words) {
             if (!wordsByLength[word.length]) wordsByLength[word.length] = [];
             wordsByLength[word.length].push({
