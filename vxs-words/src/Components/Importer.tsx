@@ -21,7 +21,6 @@ export function Importer(props: ImporterProps) {
     return (
         <VStack spacing={4} align='stretch'>
             <Button onClick={props.onBackClick}>Назад</Button>
-            <Input type="file" />
             <Textarea onChange={onTextChange} value={text} placeholder="Место для вставки слов" />
             <Button
                 // mt={4}
