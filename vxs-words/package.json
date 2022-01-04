@@ -1,7 +1,21 @@
 {
   "name": "vxs-words",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "author": {
+    "name": "Vadim Kurbskiy",
+    "email": "nerzhularthas@gmail.com",
+    "url": "https://vadimrex.github.io/"
+  },
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/VADIMREX/VXs-Words.git"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/VADIMREX/VXs-Words/issues"
+  },
+  "homepage": "https://github.com/VADIMREX/VXs-Words",
   "dependencies": {
     "@chakra-ui/react": "^1.7.3",
     "@emotion/react": "11",
