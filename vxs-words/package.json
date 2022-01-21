@@ -1,62 +1,52 @@
 {
-  "name": "vxs-words",
+  "name": "@vxs/vxs-words",
   "version": "1.0.0",
+  "main": "./lib/index.js",
+  "module": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "license": "MIT",
   "author": {
     "name": "Vadim Kurbskiy",
     "email": "nerzhularthas@gmail.com",
     "url": "https://vadimrex.github.io/"
   },
-  "private": true,
   "repository": {
     "type": "git",
     "url": "https://github.com/VADIMREX/VXs-Words.git"
   },
-  "license": "MIT",
   "bugs": {
     "url": "https://github.com/VADIMREX/VXs-Words/issues"
   },
   "homepage": "https://github.com/VADIMREX/VXs-Words",
+  "files": [
+    "/lib"
+  ],
   "dependencies": {
-    "@chakra-ui/react": "^1.7.3",
+    "@chakra-ui/react": "^1.7.4",
     "@emotion/react": "11",
     "@emotion/styled": "11",
-    "@testing-library/jest-dom": "^5.16.1",
-    "@testing-library/react": "^12.1.2",
-    "@testing-library/user-event": "^13.5.0",
-    "@types/jest": "^27.0.3",
-    "@types/node": "^16.11.17",
+    "@types/node": "^16.11.19",
     "@types/react": "^17.0.38",
     "@types/react-dom": "^17.0.11",
-    "framer-motion": "5",
-    "jest-editor-support": "^30.0.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-scripts": "5.0.0",
     "typescript": "^4.5.4",
-    "web-vitals": "^2.1.2"
+    "web-vitals": "^2.1.3",
+    "framer-motion": "5"
+  },
+  "devDependencies": {
+    "@types/react": "^17.0.38",
+    "@types/react-dom": "^17.0.11",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "typescript": "^4.5.4"
+  },
+  "peerDependencies": {
+    "react": "^16.8.0",
+    "react-dom": "^16.8.0"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+    "build": "tsc"
   }
 }

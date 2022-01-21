@@ -1,5 +1,5 @@
+import React, { useState } from "react";
 import { Box, Button, Heading, List, ListIcon, ListItem, VStack } from "@chakra-ui/react";
-import { useState } from "react";
 import WordsManager from "../Api/WordsManager";
 import { resultsModel } from "../Api/GameState";
 
@@ -34,8 +34,8 @@ export function InGame(props: InGameProps) {
 
     const [newWord, setNewWord] = useState<newLetterModel[]>([]);
     const [findedWords, setFindedWords] = useState<string[]>([]);
-    const [alreadyFinded, setAlreadyFinded] = useState("");
-    const [lastFinded, setLastFinded] = useState("");
+    const [_alreadyFinded, setAlreadyFinded] = useState("");
+    const [_lastFinded, setLastFinded] = useState("");
 
     function Letter(props: {
         char: string,

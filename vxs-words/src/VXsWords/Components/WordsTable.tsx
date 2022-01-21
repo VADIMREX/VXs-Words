@@ -1,3 +1,4 @@
+import React from 'react';
 import { Table, Tr, Th, Td, Thead, Tbody } from '@chakra-ui/react'
 import { WordInfo } from '../Api/WordsManager';
 

@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import React, { useState } from "react";
 
 import { Grid, GridItem, Heading } from "@chakra-ui/react";
 
@@ -14,12 +13,12 @@ import WordsManager from "./Api/WordsManager";
 
 type states = "newGame" | "mainMenu" | "importer" | "options" | "dictionary";
 
-export default function VXsWords(props: any) {
+export function VXsWords(_props: any) {
     const [gameState, setGameState] = useState<states>("mainMenu");
 
     //const profile = CookieManager.get("profile") || {};
 
-    function Frames(props: any) {
+    function Frames(_props: any) {
         switch (gameState) {
             case "newGame": return (
                 <Game
@@ -66,3 +65,5 @@ export default function VXsWords(props: any) {
         </Grid>
     )
 }
+
+export default VXsWords;

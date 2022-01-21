@@ -1,0 +1,8 @@
+{
+    "name": "vxs",
+    "private": true,
+    "workspaces": [
+        "vxs-words",
+        "vxs-words-app"
+    ]
+}

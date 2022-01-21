@@ -1,5 +1,5 @@
-import { Button, Input, Textarea, VStack } from "@chakra-ui/react";
-import { useState } from "react";
+import React, { useState } from "react";
+import { Button, Textarea, VStack } from "@chakra-ui/react";
 import WordsManager from "../Api/WordsManager";
 
 export interface ImporterProps {

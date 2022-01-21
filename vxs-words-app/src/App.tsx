@@ -1,11 +1,12 @@
+import React from 'react';
 import { ChakraProvider } from "@chakra-ui/react";
 
-import VXsWords from "./VXsWords/VXsWords";
+import { VXsWords } from "@vxs/vxs-words";
 
 function App() {
   return (
     <ChakraProvider>
-      <VXsWords/>
+      <VXsWords />
     </ChakraProvider>
   )
 }

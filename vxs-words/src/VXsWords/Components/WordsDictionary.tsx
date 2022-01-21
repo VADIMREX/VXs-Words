@@ -1,3 +1,4 @@
+import React from 'react';
 import { Button, VStack } from "@chakra-ui/react";
 import WordsManager from "../Api/WordsManager";
 import { WordsTable } from "./WordsTable";

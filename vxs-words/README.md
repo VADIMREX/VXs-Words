@@ -1,1 +1,0 @@
-Migrating to regular react project 

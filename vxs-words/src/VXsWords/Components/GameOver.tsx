@@ -1,3 +1,4 @@
+import React from 'react';
 import WordsManager, { WordInfo } from "../Api/WordsManager";
 import { resultsModel } from "../Api/GameState";
 import { PrepareGame } from "./PrepareGame";
