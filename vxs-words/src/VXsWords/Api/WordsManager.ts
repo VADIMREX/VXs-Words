@@ -1,5 +1,7 @@
 import { splitOnSpecialChars } from '../libs/VXsStringUtils';
 
+import { IndexDBManager } from '../Api/IndexDBManager';
+
 type VXsIDictionary<TKey extends string | number | symbol, TValue> = {
     [key in TKey]: TValue;
 };
@@ -21,12 +23,21 @@ const WordsManager = new (class WordsManager {
     words: VXsIDictionary<string, number>;
     mostCommon: number;
     longest: number;
+    storageManager = new IndexDBManager("words", "words");
 
     constructor() {
         this.words = {};
         this.mostCommon = 0;
         this.longest = 0;
+
+        this.storageManager.get<VXsIDictionary<string, number>>("words").then(v => {
+            if (!v) return;
+            this.words = v;
+            this.getMostCommon();
+            this.getLongest();
+        }).catch();
     }
+    
     getWordKey(word: string): WordKey {
         let res: WordKey = {};
         for (let i = 0; i < word.length; i++)
@@ -68,10 +79,12 @@ const WordsManager = new (class WordsManager {
         }
         this.getMostCommon();
         this.getLongest();
+
+        this.storageManager.add("words", this.words);
     }
     getText() {
         return Object.entries(this.words)
-                     .map(x=>x[0]);
+            .map(x => x[0]);
     }
     /** 
      * Найти случайное слово
